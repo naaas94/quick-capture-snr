@@ -1,0 +1,308 @@
+# Observability Configuration
+# Configuration for comprehensive monitoring, metrics, and health tracking
+
+observability:
+  # General settings
+  enabled: true
+  log_level: info
+  log_format: json
+  log_file: logs/quickcapture.log
+  
+  # Metrics collection
+  metrics_enabled: true
+  health_monitoring: true
+  performance_tracking: true
+  drift_detection: true
+  alert_system: true
+
+# Metrics configuration
+metrics:
+  # Prometheus settings
+  prometheus_enabled: true
+  prometheus_endpoint: :9090
+  prometheus_path: /metrics
+  collection_interval: 15s
+  
+  # Metrics retention
+  retention_days: 30
+  max_metrics_points: 10000
+  
+  # Custom metrics
+  custom_metrics:
+    - name: quickcapture_notes_ingested_total
+      type: counter
+      description: "Total number of notes ingested"
+    - name: quickcapture_validation_success_rate
+      type: gauge
+      description: "Validation success rate percentage"
+    - name: quickcapture_processing_duration_seconds
+      type: histogram
+      description: "Note processing duration in seconds"
+    - name: quickcapture_semantic_coherence_score
+      type: histogram
+      description: "Semantic coherence scores"
+    - name: quickcapture_tag_quality_score
+      type: histogram
+      description: "Tag quality scores"
+    - name: quickcapture_storage_operation_duration_seconds
+      type: histogram
+      description: "Storage operation duration in seconds"
+    - name: quickcapture_error_rate
+      type: gauge
+      description: "Error rate percentage"
+    - name: quickcapture_active_notes
+      type: gauge
+      description: "Number of active notes"
+    - name: quickcapture_total_tags
+      type: gauge
+      description: "Total number of unique tags"
+
+# Health monitoring configuration
+health_monitoring:
+  enabled: true
+  check_interval_seconds: 30
+  history_size: 100
+  
+  # Health check thresholds
+  thresholds:
+    error_rate_max: 0.05
+    latency_max_ms: 200
+    validation_success_min: 0.95
+    semantic_coherence_min: 0.7
+    tag_quality_min: 0.8
+    storage_latency_max_ms: 50
+    memory_usage_max_mb: 512
+    cpu_usage_max_percent: 80
+  
+  # Alert settings
+  alert_on_degraded: true
+  alert_on_unhealthy: true
+  alert_on_critical: true
+  
+  # Health checks
+  checks:
+    database_connectivity: true
+    storage_performance: true
+    validation_performance: true
+    semantic_quality: true
+    error_rates: true
+    system_resources: true
+
+# Performance tracking configuration
+performance_tracking:
+  enabled: true
+  monitoring_interval_seconds: 5
+  history_size: 100
+  
+  # Performance thresholds
+  thresholds:
+    parsing_latency_max_ms: 50
+    validation_latency_max_ms: 100
+    storage_latency_max_ms: 50
+    total_processing_max_ms: 200
+    memory_usage_max_mb: 512
+    cpu_usage_max_percent: 80
+    disk_io_max_mb_per_sec: 100
+  
+  # System monitoring
+  enable_system_monitoring: true
+  enable_operation_profiling: true
+  bottleneck_detection: true
+  
+  # Performance metrics
+  track_operations:
+    - parsing
+    - validation
+    - storage
+    - tag_intelligence
+    - semantic_processing
+
+# Drift detection configuration
+drift_detection:
+  enabled: true
+  detection_interval_seconds: 60
+  baseline_window_hours: 24
+  current_window_hours: 1
+  min_data_points: 10
+  
+  # Drift types
+  enable_semantic_drift: true
+  enable_performance_drift: true
+  enable_quality_drift: true
+  
+  # Alert settings
+  alert_on_drift: true
+  
+  # Drift thresholds
+  thresholds:
+    semantic_coherence_drift: 0.1
+    tag_quality_drift: 0.15
+    validation_success_drift: 0.05
+    processing_latency_drift: 0.2
+    error_rate_drift: 0.1
+    tag_usage_drift: 0.25
+
+# Alert system configuration
+alert_system:
+  enabled: true
+  
+  # Alert channels
+  channels:
+    console: true
+    log_file: true
+    email: false
+    webhook: false
+    slack: false
+  
+  # Alert levels
+  levels:
+    info: true
+    warning: true
+    error: true
+    critical: true
+  
+  # Alert thresholds
+  thresholds:
+    semantic_drift_threshold: 0.1
+    performance_degradation_threshold: 200ms
+    error_rate_threshold: 0.01
+    health_degradation_threshold: 0.8
+  
+  # Alert aggregation
+  aggregation:
+    enabled: true
+    window_seconds: 300
+    max_alerts_per_window: 10
+  
+  # Alert templates
+  templates:
+    drift_alert: "Drift detected: {metric} changed by {change_percent:.1%}"
+    performance_alert: "Performance degradation: {operation} latency {latency}ms"
+    error_alert: "Error rate increased: {error_rate:.1%}"
+    health_alert: "System health degraded: {score:.2f}"
+
+# Logging configuration
+logging:
+  enabled: true
+  level: info
+  format: json
+  
+  # Log destinations
+  destinations:
+    console: true
+    file: true
+    syslog: false
+  
+  # File logging
+  file:
+    path: logs/quickcapture.log
+    max_size_mb: 100
+    max_files: 10
+    compress: true
+  
+  # Log categories
+  categories:
+    application: true
+    metrics: true
+    health: true
+    performance: true
+    drift: true
+    errors: true
+    security: true
+
+# Dashboard configuration
+dashboard:
+  enabled: true
+  port: 8080
+  host: localhost
+  
+  # Dashboard components
+  components:
+    metrics_overview: true
+    health_status: true
+    performance_charts: true
+    drift_analysis: true
+    error_analysis: true
+    system_resources: true
+  
+  # Chart settings
+  charts:
+    time_range_hours: 24
+    refresh_interval_seconds: 30
+    max_data_points: 1000
+
+# Export and reporting
+export:
+  enabled: true
+  
+  # Export formats
+  formats:
+    json: true
+    csv: true
+    prometheus: true
+  
+  # Export schedule
+  schedule:
+    metrics_export_interval_hours: 1
+    health_report_interval_hours: 6
+    performance_report_interval_hours: 12
+    drift_report_interval_hours: 24
+  
+  # Export destinations
+  destinations:
+    local_file: true
+    remote_api: false
+    cloud_storage: false
+
+# Integration settings
+integrations:
+  # External monitoring systems
+  prometheus: true
+  grafana: false
+  datadog: false
+  new_relic: false
+  
+  # API endpoints
+  api:
+    enabled: true
+    port: 8081
+    host: localhost
+    authentication: false
+  
+  # Webhook endpoints
+  webhooks:
+    health_alerts: ""
+    performance_alerts: ""
+    drift_alerts: ""
+    error_alerts: ""
+
+# Security and privacy
+security:
+  # Data privacy
+  anonymize_metrics: false
+  mask_sensitive_data: true
+  
+  # Access control
+  require_authentication: false
+  allowed_ips: []
+  
+  # Audit logging
+  audit_logging: true
+  audit_log_path: logs/audit.log
+
+# Maintenance and cleanup
+maintenance:
+  enabled: true
+  
+  # Data cleanup
+  cleanup:
+    metrics_retention_days: 30
+    logs_retention_days: 90
+    health_history_days: 7
+    performance_history_days: 30
+  
+  # Cleanup schedule
+  schedule:
+    cleanup_interval_hours: 24
+    vacuum_interval_hours: 168  # Weekly
+    optimize_interval_hours: 168  # Weekly 

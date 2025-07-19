@@ -1,0 +1,191 @@
+# Tag Intelligence Configuration
+# Configuration for intelligent tag management, suggestion, and drift detection
+
+tag_intelligence:
+  # Tag suggestion settings
+  suggestion_confidence_threshold: 0.8
+  max_suggestions_per_note: 5
+  min_tag_similarity_score: 0.7
+  enable_semantic_suggestions: true
+  enable_co_occurrence_suggestions: true
+  
+  # Drift detection settings
+  drift_detection_window: 24h
+  drift_threshold_percent: 25.0
+  min_tag_usage_count: 3
+  enable_emerging_tag_detection: true
+  enable_dying_tag_detection: true
+  
+  # Tag hierarchy settings
+  max_tag_hierarchy_depth: 3
+  enable_hierarchy_learning: true
+  hierarchy_similarity_threshold: 0.8
+  
+  # Quality scoring settings
+  quality_score_weights:
+    relevance: 0.4
+    specificity: 0.3
+    consistency: 0.2
+    frequency: 0.1
+  
+  # Tag consolidation settings
+  consolidation_similarity_threshold: 0.85
+  min_consolidation_candidates: 2
+  enable_auto_consolidation: false
+
+# Tag hierarchy definitions
+tag_hierarchy:
+  technology:
+    - ml
+    - ai
+    - programming
+    - data_science
+    - software_engineering
+    - web_development
+    - mobile_development
+    - devops
+    - cloud_computing
+    - cybersecurity
+  
+  concepts:
+    - epistemology
+    - methodology
+    - theory
+    - philosophy
+    - psychology
+    - sociology
+    - economics
+    - politics
+    - history
+    - science
+  
+  domains:
+    - business
+    - education
+    - healthcare
+    - finance
+    - marketing
+    - research
+    - academia
+    - industry
+    - government
+    - non_profit
+  
+  activities:
+    - meeting
+    - planning
+    - analysis
+    - design
+    - implementation
+    - testing
+    - review
+    - documentation
+    - training
+    - presentation
+  
+  priorities:
+    - urgent
+    - important
+    - high
+    - medium
+    - low
+    - critical
+    - optional
+    - nice_to_have
+
+# Tag quality rules
+tag_quality_rules:
+  # Forbidden tags (too generic or problematic)
+  forbidden_tags:
+    - temp
+    - test
+    - todo
+    - tbd
+    - misc
+    - other
+    - general
+    - random
+    - stuff
+    - things
+  
+  # Preferred tag formats
+  preferred_formats:
+    - lowercase_with_underscores
+    - single_words
+    - descriptive_phrases
+  
+  # Minimum and maximum tag lengths
+  min_tag_length: 2
+  max_tag_length: 50
+  
+  # Tag frequency thresholds
+  min_usage_frequency: 1
+  max_usage_frequency: 1000
+  
+  # Semantic coherence rules
+  semantic_rules:
+    avoid_ambiguous_tags: true
+    prefer_specific_over_general: true
+    encourage_consistent_terminology: true
+    discourage_duplicate_meaning: true
+
+# Co-occurrence analysis settings
+co_occurrence_analysis:
+  enabled: true
+  min_co_occurrence_count: 2
+  max_co_occurrence_pairs: 1000
+  similarity_threshold: 0.6
+  analysis_window_days: 30
+  
+  # Weighting factors for co-occurrence scoring
+  weights:
+    frequency: 0.4
+    recency: 0.3
+    semantic_similarity: 0.3
+
+# Tag suggestion algorithms
+suggestion_algorithms:
+  semantic_similarity:
+    enabled: true
+    model_name: "all-MiniLM-L6-v2"
+    similarity_threshold: 0.7
+    max_candidates: 10
+  
+  co_occurrence_patterns:
+    enabled: true
+    min_pattern_frequency: 3
+    pattern_window_size: 5
+  
+  hierarchical_inference:
+    enabled: true
+    max_inference_depth: 2
+    confidence_decay_factor: 0.8
+  
+  content_analysis:
+    enabled: true
+    keyword_extraction: true
+    topic_modeling: false
+    entity_recognition: true
+
+# Performance settings
+performance:
+  cache_tag_embeddings: true
+  cache_size: 10000
+  cache_ttl_hours: 24
+  batch_processing_size: 100
+  parallel_processing: true
+  max_workers: 4
+
+# Monitoring and alerting
+monitoring:
+  track_tag_usage_patterns: true
+  alert_on_tag_drift: true
+  alert_on_quality_degradation: true
+  generate_usage_reports: true
+  report_frequency: "daily"
+  
+  # Alert thresholds
+  alert_thresholds:
+    tag_drift_percent: 25.0
+    quality_degradation_percent: 15.0
+    usage_pattern_change_percent: 30.0 

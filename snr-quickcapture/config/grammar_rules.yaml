@@ -1,0 +1,124 @@
+# Grammar Rules Configuration
+# Controls validation rule toggles for QuickCapture
+
+# Input parsing rules
+parsing:
+  # Minimum number of tags required
+  min_tags: 1
+  
+  # Maximum number of tags allowed
+  max_tags: 10
+  
+  # Minimum note body length
+  min_note_length: 10
+  
+  # Maximum note body length
+  max_note_length: 1000
+  
+  # Minimum comment length (if provided)
+  min_comment_length: 5
+  
+  # Maximum comment length
+  max_comment_length: 500
+  
+  # Allowed tag characters (regex pattern)
+  tag_pattern: "^[a-zA-Z0-9_-]+$"
+  
+  # Tag length constraints
+  min_tag_length: 2
+  max_tag_length: 20
+
+# Validation rules
+validation:
+  # Semantic density thresholds
+  min_semantic_density: 0.2
+  warning_semantic_density: 0.4
+  
+  # Confidence score thresholds
+  min_confidence_score: 0.3
+  warning_confidence_score: 0.5
+  
+  # Tag quality thresholds
+  min_tag_quality: 0.4
+  warning_tag_quality: 0.6
+  
+  # Content type validation
+  require_action_verbs_for_tasks: true
+  require_participants_for_meetings: false
+  require_technical_details_for_code: true
+  
+  # Duplicate detection
+  check_duplicate_tags: true
+  check_duplicate_notes: true
+  
+  # Generic tag detection
+  flag_generic_tags: true
+  generic_tags:
+    - "general"
+    - "misc"
+    - "other"
+    - "todo"
+    - "note"
+    - "info"
+
+# Processing rules
+processing:
+  # Auto-correction
+  auto_fix_whitespace: true
+  auto_fix_tag_format: true
+  auto_fix_case: true
+  
+  # Content optimization
+  strip_problematic_chars: true
+  normalize_whitespace: true
+  preserve_semantic_structure: true
+  
+  # Metadata enrichment
+  calculate_semantic_density: true
+  classify_content_type: true
+  generate_tag_hierarchy: true
+  calculate_co_occurrence_patterns: true
+
+# Storage rules
+storage:
+  # Database settings
+  enable_atomic_operations: true
+  enable_backup: true
+  backup_interval_hours: 24
+  
+  # Vector store settings
+  enable_semantic_search: true
+  embedding_model: "all-MiniLM-L6-v2"
+  vector_dimension: 384
+  
+  # Performance settings
+  batch_size: 100
+  max_concurrent_operations: 10
+  cache_size_mb: 512
+
+# Tag intelligence rules
+tag_intelligence:
+  # Suggestion settings
+  enable_tag_suggestions: true
+  min_suggestion_confidence: 0.3
+  max_suggestions_per_note: 10
+  
+  # Drift detection
+  enable_drift_detection: true
+  drift_detection_window_days: 30
+  emerging_tag_growth_threshold: 0.5
+  dying_tag_decline_threshold: 0.3
+  
+  # Consolidation settings
+  enable_tag_consolidation: true
+  min_similarity_threshold: 0.7
+  max_consolidation_suggestions: 10
+  
+  # Quality scoring
+  enable_quality_scoring: true
+  quality_weights:
+    usage_frequency: 0.3
+    avg_confidence: 0.3
+    avg_semantic_density: 0.2
+    tag_specificity: 0.1
+    format_quality: 0.1 

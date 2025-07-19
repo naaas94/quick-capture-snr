@@ -1,0 +1,170 @@
+# Semantic Validation Configuration
+# Controls semantic analysis thresholds and parameters
+
+# Semantic density calculation
+semantic_density:
+  # Stopword ratio weight
+  stopword_ratio_weight: 0.4
+  
+  # Token diversity weight
+  diversity_weight: 0.3
+  
+  # Average word length weight
+  length_weight: 0.3
+  
+  # Minimum semantic density threshold
+  min_threshold: 0.2
+  
+  # Warning threshold
+  warning_threshold: 0.4
+  
+  # Good semantic density threshold
+  good_threshold: 0.7
+  
+  # Stopwords list (common English stopwords)
+  stopwords:
+    - "a", "an", "and", "are", "as", "at", "be", "by", "for", "from"
+    - "has", "he", "in", "is", "it", "its", "of", "on", "that", "the"
+    - "to", "was", "will", "with", "this", "but", "they", "have"
+    - "had", "what", "said", "each", "which", "she", "do", "how", "their"
+    - "if", "up", "out", "many", "then", "them", "these", "so", "some"
+    - "her", "would", "make", "like", "into", "him", "time", "two"
+    - "more", "go", "no", "way", "could", "my", "than", "first", "been"
+    - "call", "who", "its", "now", "find", "long", "down", "day", "did"
+    - "get", "come", "made", "may", "part"
+
+# Content type classification
+content_classification:
+  # Task indicators
+  task_indicators:
+    - "todo", "task", "do", "need", "must", "should", "implement", "fix"
+    - "create", "update", "review", "test", "deploy", "configure"
+    - "build", "install", "setup", "configure", "debug", "optimize"
+  
+  # Meeting indicators
+  meeting_indicators:
+    - "meeting", "discuss", "discussed", "call", "presentation", "agenda"
+    - "team", "participants", "attendees", "schedule", "appointment"
+    - "conference", "workshop", "session", "briefing", "review"
+  
+  # Code indicators
+  code_indicators:
+    - "code", "function", "class", "method", "bug", "error", "debug", "test"
+    - "api", "database", "algorithm", "script", "program", "software"
+    - "development", "programming", "coding", "implementation"
+  
+  # Idea indicators
+  idea_indicators:
+    - "idea", "think", "consider", "maybe", "could", "might", "suggestion"
+    - "concept", "proposal", "thought", "brainstorm", "innovation"
+    - "possibility", "potential", "opportunity", "vision"
+  
+  # Reference indicators
+  reference_indicators:
+    - "reference", "link", "url", "article", "paper", "book", "document"
+    - "resource", "source", "citation", "bibliography", "reading"
+    - "research", "study", "analysis", "report", "documentation"
+
+# Semantic coherence scoring
+semantic_coherence:
+  # Base coherence from semantic density
+  base_weight: 0.6
+  
+  # Tag quality contribution
+  tag_quality_weight: 0.2
+  
+  # Content type specificity bonus
+  content_type_bonus: 0.1
+  
+  # Issue penalty
+  issue_penalty: 0.05
+  
+  # Minimum coherence threshold
+  min_threshold: 0.3
+  
+  # Good coherence threshold
+  good_threshold: 0.7
+
+# Confidence scoring
+confidence_scoring:
+  # Base confidence from parsing
+  base_weight: 1.0
+  
+  # Validation penalty for invalid notes
+  validation_penalty: 0.3
+  
+  # Issue penalty (per issue)
+  issue_penalty: 0.1
+  
+  # Semantic coherence bonus
+  coherence_bonus: 0.1
+  
+  # Comment bonus
+  comment_bonus: 0.1
+  
+  # Minimum confidence threshold
+  min_threshold: 0.3
+  
+  # Warning threshold
+  warning_threshold: 0.5
+
+# Pattern recognition
+pattern_recognition:
+  # Common issue patterns
+  common_issues:
+    - "starts_with_the": "Note starts with 'the' - consider more direct phrasing"
+    - "excessive_whitespace": "Excessive whitespace detected - clean up extra spaces"
+    - "incomplete_sentence": "Note appears to be incomplete - consider adding proper punctuation"
+    - "generic_tags": "Generic tags detected - consider using more specific tags"
+    - "too_many_tags": "Too many tags - consider consolidating"
+    - "duplicate_tags": "Duplicate tags detected - remove duplicates"
+    - "invalid_tag_format": "Tag contains invalid characters - use only letters, numbers, hyphens, and underscores"
+  
+  # Quality improvement patterns
+  improvement_patterns:
+    - "add_action_verb": "Add action verb for better clarity"
+    - "expand_description": "Expand description with more details"
+    - "use_specific_tags": "Use more specific and descriptive tags"
+    - "add_context": "Add context or background information"
+    - "improve_structure": "Improve sentence structure and flow"
+
+# Semantic similarity
+semantic_similarity:
+  # Minimum similarity threshold for tag consolidation
+  min_consolidation_threshold: 0.7
+  
+  # Similarity calculation weights
+  exact_match_weight: 1.0
+  prefix_match_weight: 0.8
+  contains_match_weight: 0.6
+  character_overlap_weight: 0.4
+  
+  # Tag similarity cache size
+  cache_size: 1000
+
+# Content optimization
+content_optimization:
+  # Characters to strip for SNR compatibility
+  problematic_chars:
+    - "&", "<", ">", "\"", "'"
+  
+  # Whitespace normalization
+  normalize_whitespace: true
+  
+  # Preserve semantic structure
+  preserve_structure: true
+  
+  # Content-specific optimizations
+  content_optimizations:
+    code:
+      - "preserve_code_blocks"
+      - "maintain_indentation"
+    meeting:
+      - "extract_action_items"
+      - "identify_participants"
+    task:
+      - "extract_deadlines"
+      - "identify_dependencies"
+    idea:
+      - "extract_key_concepts"
+      - "identify_related_ideas" 

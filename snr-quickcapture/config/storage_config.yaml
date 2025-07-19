@@ -1,0 +1,203 @@
+# Storage Configuration
+# Configuration for hybrid storage with SQLite primary and vector store secondary
+
+storage:
+  # Primary storage settings
+  primary: sqlite
+  vector_store: faiss
+  backup: jsonl
+  atomic_operations: true
+  enable_wal: true
+  
+  # Database settings
+  database_path: storage/quickcapture.db
+  backup_path: storage/backup/
+  vector_store_path: storage/vector_store/
+  
+  # Performance settings
+  cache_size: 10000
+  page_size: 4096
+  synchronous: normal
+  journal_mode: wal
+  temp_store: memory
+  
+  # Connection pooling
+  max_connections: 10
+  connection_timeout: 30
+  pool_timeout: 60
+
+# SQLite specific configuration
+sqlite:
+  # Database file settings
+  database_path: storage/quickcapture.db
+  enable_wal: true
+  cache_size: 10000
+  page_size: 4096
+  
+  # Performance optimizations
+  synchronous: normal
+  journal_mode: wal
+  temp_store: memory
+  mmap_size: 268435456  # 256MB
+  
+  # Indexing strategy
+  auto_index: true
+  index_analysis: true
+  
+  # Maintenance settings
+  auto_vacuum: incremental
+  incremental_vacuum: 1000
+  optimize_on_close: true
+  
+  # Backup settings
+  backup_enabled: true
+  backup_interval_hours: 24
+  backup_retention_days: 7
+  backup_compression: true
+
+# Vector store configuration
+vector_store:
+  # FAISS settings
+  type: faiss
+  dimension: 768
+  index_type: ivf
+  nlist: 100
+  nprobe: 10
+  
+  # Performance settings
+  use_gpu: false
+  gpu_id: 0
+  threads: 4
+  
+  # Storage settings
+  index_path: storage/vector_store/faiss_index
+  metadata_path: storage/vector_store/metadata.json
+  
+  # Index maintenance
+  rebuild_threshold: 10000
+  auto_rebuild: true
+  rebuild_interval_hours: 24
+  
+  # Search settings
+  search_k: 100
+  search_nprobe: 10
+  similarity_threshold: 0.7
+
+# JSONL backup configuration
+jsonl_backup:
+  enabled: true
+  backup_path: storage/backup/
+  filename_pattern: "quickcapture_backup_{timestamp}.jsonl"
+  compression: true
+  max_file_size_mb: 100
+  
+  # Backup schedule
+  backup_interval_hours: 6
+  retention_days: 30
+  max_backup_files: 120
+  
+  # Backup content
+  include_metadata: true
+  include_embeddings: false
+  include_validation_data: true
+  
+  # Validation
+  validate_backup_integrity: true
+  checksum_algorithm: sha256
+
+# Data retention and archival
+data_retention:
+  # Retention policies
+  active_notes_days: 365
+  archived_notes_days: 2555  # 7 years
+  deleted_notes_days: 30
+  
+  # Archival settings
+  enable_archival: true
+  archival_threshold_days: 365
+  archival_batch_size: 1000
+  
+  # Cleanup settings
+  enable_cleanup: true
+  cleanup_interval_hours: 24
+  cleanup_batch_size: 100
+
+# Performance monitoring
+performance_monitoring:
+  enabled: true
+  
+  # Metrics collection
+  track_query_performance: true
+  track_storage_operations: true
+  track_index_performance: true
+  
+  # Performance thresholds
+  slow_query_threshold_ms: 100
+  slow_storage_threshold_ms: 50
+  slow_index_threshold_ms: 200
+  
+  # Alerting
+  alert_on_performance_degradation: true
+  alert_on_storage_errors: true
+  alert_on_index_errors: true
+
+# Security settings
+security:
+  # Database security
+  enable_encryption: false
+  encryption_algorithm: aes256
+  key_derivation: pbkdf2
+  
+  # Access control
+  read_only_mode: false
+  backup_encryption: false
+  
+  # Audit logging
+  enable_audit_log: true
+  audit_log_path: storage/audit.log
+  log_all_operations: false
+  log_sensitive_operations: true
+
+# Migration and versioning
+migration:
+  # Schema versioning
+  current_schema_version: 1
+  auto_migrate: true
+  backup_before_migration: true
+  
+  # Migration settings
+  migration_timeout_seconds: 300
+  rollback_on_failure: true
+  validate_after_migration: true
+
+# Error handling and recovery
+error_handling:
+  # Connection retry settings
+  max_retry_attempts: 3
+  retry_delay_seconds: 1
+  exponential_backoff: true
+  
+  # Error recovery
+  auto_recovery: true
+  recovery_timeout_seconds: 60
+  
+  # Error logging
+  log_errors: true
+  error_log_path: storage/error.log
+  log_level: warning
+
+# Monitoring and health checks
+health_checks:
+  enabled: true
+  check_interval_seconds: 30
+  
+  # Health check types
+  database_connectivity: true
+  storage_performance: true
+  index_integrity: true
+  backup_integrity: true
+  
+  # Health thresholds
+  max_response_time_ms: 100
+  min_free_space_mb: 1000
+  max_database_size_mb: 1000000 
