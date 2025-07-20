@@ -1,3 +1,4 @@
+
 #!/usr/bin/env python3
 """
 QuickCapture Performance Tracker
@@ -85,8 +86,12 @@ class PerformanceTracker:
         # Thread safety
         self.lock = threading.Lock()
         
-        # Start background monitoring
-        self._start_background_monitoring()
+        # Background monitoring flag
+        self._monitoring_enabled = self.config.get('enable_system_monitoring', True)
+        
+        # Start background monitoring only if enabled
+        if self._monitoring_enabled:
+            self._start_background_monitoring()
     
     def _default_config(self) -> Dict[str, Any]:
         """Default performance tracking configuration."""
@@ -109,13 +114,17 @@ class PerformanceTracker:
     
     def _start_background_monitoring(self):
         """Start background performance monitoring."""
+        # Only start background monitoring if enabled in config
+        if not self.config.get('enable_system_monitoring', True):
+            return
+            
         def monitor_performance():
             while True:
                 try:
                     if self.config['enable_system_monitoring']:
                         self._collect_system_metrics()
                     
-                    if self.config['bottleneck_detection']:
+                    if self.config.get('bottleneck_detection', True):
                         self._detect_bottlenecks()
                     
                     time.sleep(self.config['monitoring_interval_seconds'])
@@ -147,8 +156,11 @@ class PerformanceTracker:
     def _collect_system_metrics(self):
         """Collect system-level performance metrics."""
         try:
-            # CPU usage
-            cpu_percent = psutil.cpu_percent(interval=1)
+            # CPU usage - use non-blocking call or default value
+            try:
+                cpu_percent = psutil.cpu_percent(interval=None)  # Non-blocking
+            except:
+                cpu_percent = 0.0  # Default if psutil fails
             
             # Memory usage
             memory = psutil.virtual_memory()
@@ -162,7 +174,10 @@ class PerformanceTracker:
             # Process-specific metrics
             process = psutil.Process(os.getpid())
             process_memory_mb = process.memory_info().rss / (1024 * 1024)
-            process_cpu_percent = process.cpu_percent()
+            try:
+                process_cpu_percent = process.cpu_percent(interval=None)  # Non-blocking
+            except:
+                process_cpu_percent = 0.0  # Default if psutil fails
             
             # Network I/O
             network_io = psutil.net_io_counters()
@@ -233,34 +248,41 @@ class PerformanceTracker:
             if self.system_metrics:
                 self.system_metrics[-1].bottlenecks = bottlenecks
     
-    def get_operation_profile(self, operation: str) -> Optional[PerformanceProfile]:
+    def get_operation_profile(self, operation: str, lock_held: bool = False) -> Optional[PerformanceProfile]:
         """Get performance profile for a specific operation."""
-        with self.lock:
-            if operation not in self.operation_times or not self.operation_times[operation]:
-                return None
-            
-            times = self.operation_times[operation]
-            call_count = self.operation_calls[operation]
-            error_count = self.operation_errors[operation]
-            
-            return PerformanceProfile(
-                operation=operation,
-                avg_duration_ms=statistics.mean(times),
-                p95_duration_ms=statistics.quantiles(times, n=20)[18] if len(times) >= 20 else max(times),
-                p99_duration_ms=statistics.quantiles(times, n=100)[98] if len(times) >= 100 else max(times),
-                min_duration_ms=min(times),
-                max_duration_ms=max(times),
-                call_count=call_count,
-                error_count=error_count,
-                success_rate=(call_count - error_count) / call_count if call_count > 0 else 1.0
-            )
+        if not lock_held:
+            with self.lock:
+                return self._get_operation_profile_internal(operation)
+        else:
+            return self._get_operation_profile_internal(operation)
+    
+    def _get_operation_profile_internal(self, operation: str) -> Optional[PerformanceProfile]:
+        """Internal method to get operation profile (assumes lock is held)."""
+        if operation not in self.operation_times or not self.operation_times[operation]:
+            return None
+        
+        times = self.operation_times[operation]
+        call_count = self.operation_calls[operation]
+        error_count = self.operation_errors[operation]
+        
+        return PerformanceProfile(
+            operation=operation,
+            avg_duration_ms=statistics.mean(times),
+            p95_duration_ms=statistics.quantiles(times, n=20)[18] if len(times) >= 20 else max(times),
+            p99_duration_ms=statistics.quantiles(times, n=100)[98] if len(times) >= 100 else max(times),
+            min_duration_ms=min(times),
+            max_duration_ms=max(times),
+            call_count=call_count,
+            error_count=error_count,
+            success_rate=(call_count - error_count) / call_count if call_count > 0 else 1.0
+        )
     
     def get_all_profiles(self) -> Dict[str, PerformanceProfile]:
         """Get performance profiles for all operations."""
         profiles = {}
         with self.lock:
             for operation in self.operation_times.keys():
-                profile = self.get_operation_profile(operation)
+                profile = self._get_operation_profile_internal(operation)  # Use internal method since lock is held
                 if profile:
                     profiles[operation] = profile
         return profiles
@@ -382,6 +404,12 @@ class OperationTracker:
 
 # Global performance tracker instance
 _performance_tracker: Optional[PerformanceTracker] = None
+
+
+def reset_global_tracker():
+    """Reset the global performance tracker (useful for testing)."""
+    global _performance_tracker
+    _performance_tracker = None
 
 
 def get_performance_tracker(config: Optional[Dict[str, Any]] = None) -> PerformanceTracker:

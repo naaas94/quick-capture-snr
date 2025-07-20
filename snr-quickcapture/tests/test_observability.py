@@ -31,7 +31,8 @@ from observability.health_monitor import (
 
 from observability.performance_tracker import (
     PerformanceTracker, PerformanceMetric, PerformanceSnapshot, PerformanceProfile,
-    get_performance_tracker, track_operation, record_operation, get_performance_summary
+    get_performance_tracker, track_operation, record_operation, get_performance_summary,
+    reset_global_tracker
 )
 
 from observability.drift_detector import (
@@ -194,8 +195,30 @@ class TestPerformanceTracker:
     
     def setup_method(self):
         """Set up test environment."""
-        self.tracker = PerformanceTracker()
+        # Use test configuration that disables background monitoring
+        test_config = {
+            'monitoring_interval_seconds': 5,
+            'history_size': 100,
+            'enable_system_monitoring': False,  # Disable for tests
+            'enable_operation_profiling': True,
+            'bottleneck_detection': False,  # Disable for tests
+            'thresholds': {
+                'parsing_latency_max_ms': 50,
+                'validation_latency_max_ms': 100,
+                'storage_latency_max_ms': 50,
+                'total_processing_max_ms': 200,
+                'memory_usage_max_mb': 512,
+                'cpu_usage_max_percent': 80,
+                'disk_io_max_mb_per_sec': 100,
+            }
+        }
+        self.tracker = PerformanceTracker(test_config)
         self.tracker.reset_performance_data()
+    
+    def teardown_method(self):
+        """Clean up test environment."""
+        if hasattr(self, 'tracker'):
+            self.tracker.reset_performance_data()
     
     def test_performance_tracker_initialization(self):
         """Test performance tracker initialization."""
@@ -249,7 +272,7 @@ class TestPerformanceTracker:
         self.tracker.record_operation("op1", 100.0, True)
         self.tracker.record_operation("op2", 200.0, True)
         
-        summary = self.tracker.get_performance_summary()
+        summary = self.tracker.get_performance_summary()  # Use instance method instead of global function
         
         assert "timestamp" in summary
         assert "operations" in summary
@@ -271,8 +294,13 @@ class TestPerformanceTracker:
     
     def test_convenience_functions(self):
         """Test convenience functions."""
-        # Test global tracker
-        global_tracker = get_performance_tracker()
+        # Reset global tracker and create with test configuration
+        reset_global_tracker()
+        test_config = {
+            'enable_system_monitoring': False,  # Disable for tests
+            'bottleneck_detection': False,  # Disable for tests
+        }
+        global_tracker = get_performance_tracker(test_config)
         assert global_tracker is not None
         
         # Test convenience functions
@@ -390,6 +418,14 @@ class TestIntegration:
     
     def test_performance_and_metrics_integration(self):
         """Test integration between performance tracking and metrics."""
+        # Reset global tracker and create with test configuration
+        reset_global_tracker()
+        test_config = {
+            'enable_system_monitoring': False,  # Disable for tests
+            'bottleneck_detection': False,  # Disable for tests
+        }
+        get_performance_tracker(test_config)
+        
         # Record performance data
         with track_operation("test_integration"):
             time.sleep(0.01)
@@ -400,10 +436,17 @@ class TestIntegration:
     
     def test_all_modules_initialization(self):
         """Test that all observability modules can be initialized together."""
+        # Reset global tracker and create with test configuration
+        reset_global_tracker()
+        test_config = {
+            'enable_system_monitoring': False,  # Disable for tests
+            'bottleneck_detection': False,  # Disable for tests
+        }
+        
         # Initialize all modules
         metrics = get_metrics_collector()
         health = get_health_monitor()
-        performance = get_performance_tracker()
+        performance = get_performance_tracker(test_config)
         drift = get_drift_detector()
         
         assert metrics is not None
