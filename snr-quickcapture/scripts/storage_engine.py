@@ -14,6 +14,8 @@ from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timezone
 import logging
 from contextlib import contextmanager
+import faiss
+import numpy as np
 
 from .models import ParsedNote, BatchProcessingResult
 from .parse_input import ContentType
@@ -118,11 +120,18 @@ class StorageEngine:
             conn.commit()
     
     def _init_vector_store(self):
-        """Initialize vector store for semantic search."""
-        # Placeholder for vector store initialization
-        # In a full implementation, this would use sentence-transformers
-        # and a vector database like FAISS or Chroma
-        logger.info("Vector store initialization placeholder - semantic search not yet implemented")
+        """Initialize vector store for semantic search using FAISS."""
+        dimension = 768  # Example dimension, should match your embeddings
+        self.index = faiss.IndexFlatL2(dimension)
+        logger.info("Initialized FAISS index for vector store")
+
+        # Load existing index if available
+        index_path = self.vector_store_path / "faiss_index"
+        if index_path.exists():
+            faiss.read_index(str(index_path))
+            logger.info("Loaded existing FAISS index from disk")
+        else:
+            logger.info("No existing FAISS index found, starting fresh")
     
     def _get_connection(self):
         """Get or create a persistent database connection."""
@@ -546,6 +555,26 @@ class StorageEngine:
                 'total_tags': 0,
                 'database_size_mb': 0.0
             }
+
+    def add_to_vector_store(self, vectors: List[List[float]], ids: List[int]):
+        """Add vectors to the FAISS index."""
+        if len(vectors) != len(ids):
+            raise ValueError("Vectors and IDs must have the same length")
+        self.index.add_with_ids(np.array(vectors, dtype='float32'), np.array(ids))
+        logger.info(f"Added {len(vectors)} vectors to the FAISS index")
+
+    def search_vector_store(self, query_vector: List[float], k: int = 10) -> List[int]:
+        """Search the FAISS index and return the top k nearest neighbors."""
+        query_vector = np.array(query_vector, dtype='float32').reshape(1, -1)
+        distances, indices = self.index.search(query_vector, k)
+        logger.info(f"Performed search in FAISS index, found {len(indices[0])} results")
+        return indices[0].tolist()
+
+    def save_vector_store(self):
+        """Save the FAISS index to disk."""
+        index_path = self.vector_store_path / "faiss_index"
+        faiss.write_index(self.index, str(index_path))
+        logger.info(f"FAISS index saved to {index_path}")
 
 
 if __name__ == "__main__":
