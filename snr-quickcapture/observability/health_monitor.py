@@ -15,6 +15,8 @@ import json
 import sqlite3
 from pathlib import Path
 
+import psutil
+
 from .metrics_collector import get_metrics_collector, QuickCaptureMetrics
 
 
@@ -472,8 +474,6 @@ class HealthMonitor:
         start_time = time.time()
         
         try:
-            import psutil
-            
             # Get system metrics
             memory = psutil.virtual_memory()
             cpu_percent = psutil.cpu_percent(interval=1)

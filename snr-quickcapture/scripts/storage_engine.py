@@ -124,20 +124,12 @@ class StorageEngine:
         # and a vector database like FAISS or Chroma
         logger.info("Vector store initialization placeholder - semantic search not yet implemented")
     
-    @contextmanager
     def _get_connection(self):
-        """Get database connection with proper error handling."""
-        conn = None
-        try:
-            conn = sqlite3.connect(self.db_path, timeout=30.0)
-            conn.row_factory = sqlite3.Row  # Enable dict-like access
-            yield conn
-        except sqlite3.Error as e:
-            logger.error(f"Database error: {e}")
-            raise
-        finally:
-            if conn:
-                conn.close()
+        """Get or create a persistent database connection."""
+        if not hasattr(self, '_persistent_conn') or self._persistent_conn is None:
+            self._persistent_conn = sqlite3.connect(self.db_path, timeout=30.0)
+            self._persistent_conn.row_factory = sqlite3.Row  # Enable dict-like access
+        return self._persistent_conn
     
     def store_note(self, note: ParsedNote) -> bool:
         """

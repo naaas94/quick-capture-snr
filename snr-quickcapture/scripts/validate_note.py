@@ -102,7 +102,7 @@ def validate_tags(tags: List[str], result: ValidationResult) -> float:
     if len(tags) > 10:
         result.add_issue(ValidationLevel.WARNING, f"Too many tags ({len(tags)})", "tags",
                         "Consider consolidating to 10 or fewer tags")
-        score -= 0.2
+        score -= 0.3  # Increased penalty
     
     # Check for very generic tags
     generic_tags = {'general', 'misc', 'other', 'todo', 'note', 'info'}
@@ -110,7 +110,7 @@ def validate_tags(tags: List[str], result: ValidationResult) -> float:
     if generic_count > 0:
         result.add_issue(ValidationLevel.INFO, f"{generic_count} generic tag(s) detected", "tags",
                         "Consider using more specific tags")
-        score -= 0.1 * generic_count
+        score -= 0.2 * generic_count  # Increased penalty
     
     # Add individual tag issues
     for issue in issues:
@@ -131,12 +131,12 @@ def validate_note_body(note: str, result: ValidationResult) -> float:
     
     # Check minimum length
     if len(note) < 10:
-        result.add_issue(ValidationLevel.WARNING, "Note body is very short", "note",
+        result.add_issue(ValidationLevel.ERROR, "Note body is very short", "note",
                         "Consider adding more detail")
-        score -= 0.3
+        score -= 0.5  # Increased penalty
     elif len(note) < 20:
         result.add_issue(ValidationLevel.INFO, "Note body is quite short", "note")
-        score -= 0.1
+        score -= 0.2  # Increased penalty
     
     # Check maximum length
     if len(note) > 1000:
@@ -229,7 +229,7 @@ def validate_comment(comment: Optional[str], result: ValidationResult) -> float:
     # Check comment length
     if len(comment) < 5:
         result.add_issue(ValidationLevel.INFO, "Comment is very short", "comment")
-        score -= 0.1
+        score -= 0.2  # Increased penalty
     elif len(comment) > 500:
         result.add_issue(ValidationLevel.WARNING, "Comment is very long", "comment",
                         "Consider moving detailed information to the main note")
@@ -239,7 +239,7 @@ def validate_comment(comment: Optional[str], result: ValidationResult) -> float:
     if comment.lower() in ['ok', 'good', 'nice', 'cool', 'yes', 'no']:
         result.add_issue(ValidationLevel.INFO, "Comment is very generic", "comment",
                         "Consider adding more specific information")
-        score -= 0.2
+        score -= 0.3  # Increased penalty
     
     return max(0.0, score)
 
@@ -357,7 +357,10 @@ if __name__ == "__main__":
         "task, bug: Fix the authentication issue in login module",
         "meeting, project: Discussed Q4 roadmap with team : Need to follow up on budget approval",
         "idea, ml: Consider using transformer models for text classification : Research BERT vs RoBERTa",
-        "general, misc: Some random note : ok"
+        "general, misc: Some random note : ok",
+        "misc: Ok",  # Very short and generic note
+        "general, misc:    This   note   has   too   much   whitespace   and   invalid   characters   like   @#$%^&*",  # Excessive whitespace and invalid characters
+        "tag1, tag2, tag3, tag4, tag5, tag6, tag7, tag8, tag9, tag10, tag11: Short"  # Too many tags and short content
     ]
     
     for test_input in test_inputs:

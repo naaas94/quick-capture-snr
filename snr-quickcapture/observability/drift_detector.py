@@ -15,6 +15,7 @@ import json
 import statistics
 import numpy as np
 from enum import Enum
+import psutil
 
 from .metrics_collector import get_metrics_collector
 
@@ -302,7 +303,7 @@ class DriftDetector:
             baseline_value=baseline_mean,
             change_percent=change_percent,
             timestamp=datetime.now(),
-            description=description,
+            description=f"Drift detected: {metric_name} changed by {change_percent:.1%}",
             metadata={
                 'baseline_std': baseline_std,
                 'baseline_min': baseline['min'],
