@@ -2,13 +2,13 @@
 
 ## Overview
 
-The ingestion layer is responsible for receiving, validating, and preprocessing all input content before it enters the main processing pipeline. This layer ensures data quality, consistency, and proper formatting for downstream processing.
+The ingestion layer is a critical component of the system, responsible for receiving, validating, and preprocessing all input content before it enters the main processing pipeline. This layer ensures data quality, consistency, and proper formatting for downstream processing. By handling diverse input sources and formats, the ingestion layer acts as the first line of defense against data anomalies and inconsistencies, thereby maintaining the integrity and reliability of the entire system.
 
 ## Core Components
 
 ### 1. Input Parser (`parse_input.py`)
 
-Handles the initial parsing of various input formats and sources.
+The `InputParser` class is designed to handle the initial parsing of various input formats and sources. It supports multiple input types, ensuring flexibility and adaptability in processing diverse data streams.
 
 #### Supported Input Formats
 
@@ -20,22 +20,43 @@ Handles the initial parsing of various input formats and sources.
 
 #### Input Processing Flow
 
+The `InputParser` class provides methods to parse different input types, each tailored to handle specific data formats and sources.
+
 ```python
 class InputParser:
     def parse_text_file(self, file_path: str) -> ParsedInput:
         """Parse text files and extract content"""
-        
+        # Implementation details
+        # Example usage:
+        # parser = InputParser()
+        # parsed_input = parser.parse_text_file('example.txt')
+
     def parse_json_input(self, json_data: str) -> ParsedInput:
         """Parse JSON input from API requests"""
-        
+        # Implementation details
+        # Example usage:
+        # parser = InputParser()
+        # parsed_input = parser.parse_json_input('{"key": "value"}')
+
     def parse_cli_input(self, text: str) -> ParsedInput:
         """Parse direct command line input"""
-        
+        # Implementation details
+        # Example usage:
+        # parser = InputParser()
+        # parsed_input = parser.parse_cli_input('input text')
+
     def parse_streaming_input(self, stream: Iterator[str]) -> Iterator[ParsedInput]:
         """Parse streaming content"""
+        # Implementation details
+        # Example usage:
+        # parser = InputParser()
+        # for parsed_input in parser.parse_streaming_input(stream):
+        #     process(parsed_input)
 ```
 
 #### Parsed Input Structure
+
+The `ParsedInput` class encapsulates the parsed content and its associated metadata, providing a standardized format for further processing.
 
 ```python
 class ParsedInput:
@@ -50,9 +71,11 @@ class ParsedInput:
 
 ### 2. Input Validator (`validate_note.py`)
 
-Performs comprehensive validation of input content against defined rules.
+The `InputValidator` class performs comprehensive validation of input content against defined rules, ensuring that only high-quality data proceeds to the next stages of processing.
 
 #### Validation Rules
+
+The `ValidationRules` class defines a set of rules for content, format, and security validation, safeguarding the system against invalid or malicious data.
 
 ```python
 class ValidationRules:
@@ -72,27 +95,31 @@ class ValidationRules:
 
 #### Validation Process
 
+The validation process is divided into several stages, each focusing on different aspects of the input data:
+
 1. **Content Validation**
-   - Length checks
-   - Character set validation
-   - Prohibited content detection
+   - Length checks ensure that the content is neither too short nor excessively long.
+   - Character set validation checks for allowed characters, preventing the inclusion of unwanted symbols.
+   - Prohibited content detection identifies and blocks harmful patterns, such as scripts or data URIs.
 
 2. **Format Validation**
-   - File format verification
-   - Encoding validation
-   - Structure validation
+   - File format verification ensures that the input adheres to expected formats.
+   - Encoding validation checks for correct character encoding, preventing data corruption.
+   - Structure validation verifies the overall structure of the input, ensuring it meets predefined standards.
 
 3. **Security Validation**
-   - Malicious content detection
-   - File size limits
-   - Path traversal prevention
+   - Malicious content detection identifies potential security threats within the input.
+   - File size limits prevent excessively large files from overwhelming the system.
+   - Path traversal prevention safeguards against unauthorized file access.
 
 4. **Business Rule Validation**
-   - Required field presence
-   - Data type validation
-   - Business logic compliance
+   - Required field presence checks ensure that all necessary fields are included in the input.
+   - Data type validation verifies that fields contain data of the expected type.
+   - Business logic compliance ensures that the input adheres to specific business rules.
 
 #### Validation Results
+
+The `ValidationResult` class encapsulates the outcome of the validation process, providing detailed feedback on the input's validity.
 
 ```python
 class ValidationResult:
@@ -112,9 +139,11 @@ class ValidationError:
 
 ### 3. Content Preprocessor (`snr_preprocess.py`)
 
-Prepares content for semantic processing and analysis.
+The `ContentPreprocessor` class prepares content for semantic processing and analysis, enhancing its quality and consistency.
 
 #### Preprocessing Steps
+
+The preprocessing steps are designed to clean, normalize, and segment content, ensuring it is ready for further analysis.
 
 1. **Text Cleaning**
    ```python
@@ -124,6 +153,8 @@ Prepares content for semantic processing and analysis.
        # Remove special characters
        # Convert to lowercase (if configured)
    ```
+   - **Purpose**: To remove unnecessary elements and standardize the text format.
+   - **Example**: Cleaning a text string to remove HTML tags and normalize spaces.
 
 2. **Content Normalization**
    ```python
@@ -133,6 +164,8 @@ Prepares content for semantic processing and analysis.
        # Normalize punctuation
        # Handle encoding issues
    ```
+   - **Purpose**: To ensure consistent content formatting across different inputs.
+   - **Example**: Normalizing line endings and punctuation in a document.
 
 3. **Language Detection**
    ```python
@@ -141,6 +174,8 @@ Prepares content for semantic processing and analysis.
        # Return ISO language code
        # Handle mixed language content
    ```
+   - **Purpose**: To identify the language of the content, facilitating language-specific processing.
+   - **Example**: Detecting the language of a text snippet to apply appropriate processing rules.
 
 4. **Content Segmentation**
    ```python
@@ -149,8 +184,12 @@ Prepares content for semantic processing and analysis.
        # Handle paragraph breaks
        # Preserve semantic boundaries
    ```
+   - **Purpose**: To divide content into manageable sections for analysis.
+   - **Example**: Segmenting a document into paragraphs while preserving semantic meaning.
 
 #### Preprocessing Configuration
+
+The preprocessing configuration defines the parameters and options for each preprocessing step, allowing customization based on specific requirements.
 
 ```yaml
 preprocessing:
@@ -178,7 +217,11 @@ preprocessing:
 
 ## Input Sources
 
+The ingestion layer supports multiple input sources, each handled by a dedicated class that processes the input according to its type.
+
 ### 1. File-Based Input
+
+The `FileInputHandler` class manages file-based inputs, ensuring they are correctly processed and validated.
 
 ```python
 class FileInputHandler:
@@ -192,6 +235,8 @@ class FileInputHandler:
 
 ### 2. API-Based Input
 
+The `APIInputHandler` class handles inputs received via API requests, applying necessary validation and processing.
+
 ```python
 class APIInputHandler:
     def process_api_request(self, request_data: Dict) -> ProcessingResult:
@@ -204,6 +249,8 @@ class APIInputHandler:
 
 ### 3. Command Line Input
 
+The `CLIInputHandler` class processes direct command line inputs, ensuring they are validated and processed efficiently.
+
 ```python
 class CLIInputHandler:
     def process_cli_input(self, text: str) -> ProcessingResult:
@@ -214,6 +261,8 @@ class CLIInputHandler:
 ```
 
 ### 4. Streaming Input
+
+The `StreamingInputHandler` class manages real-time content streams, processing data as it is received.
 
 ```python
 class StreamingInputHandler:
@@ -226,7 +275,11 @@ class StreamingInputHandler:
 
 ## Error Handling
 
+The ingestion layer includes robust error handling mechanisms to manage and recover from various input-related errors.
+
 ### Input Errors
+
+The `InputError` class and its subclasses define different types of errors that can occur during input processing.
 
 ```python
 class InputError(Exception):
@@ -247,6 +300,8 @@ class PreprocessingError(InputError):
 
 ### Error Recovery
 
+The system employs several strategies to recover from errors, ensuring continued operation and data integrity.
+
 1. **Graceful Degradation**
    - Continue processing with warnings
    - Apply fallback strategies
@@ -264,7 +319,11 @@ class PreprocessingError(InputError):
 
 ## Performance Optimization
 
+The ingestion layer is optimized for performance, employing techniques such as batch processing, caching, and resource management.
+
 ### Batch Processing
+
+The `BatchProcessor` class enables efficient processing of multiple inputs, leveraging parallel processing and error handling.
 
 ```python
 class BatchProcessor:
@@ -276,6 +335,8 @@ class BatchProcessor:
 ```
 
 ### Caching
+
+The `InputCache` class provides caching capabilities, reducing redundant processing and improving performance.
 
 ```python
 class InputCache:
@@ -298,7 +359,11 @@ class InputCache:
 
 ## Monitoring and Observability
 
+The ingestion layer includes monitoring and observability features to track performance and ensure system reliability.
+
 ### Metrics Collection
+
+The `IngestionMetrics` class records various metrics related to input processing, providing insights into system performance.
 
 ```python
 class IngestionMetrics:
@@ -315,6 +380,8 @@ class IngestionMetrics:
 
 ### Health Checks
 
+The `IngestionHealthCheck` class performs regular health checks on the ingestion layer, ensuring all components are functioning correctly.
+
 ```python
 class IngestionHealthCheck:
     def check_input_parsers(self) -> HealthStatus:
@@ -330,7 +397,11 @@ class IngestionHealthCheck:
 
 ## Security Considerations
 
+Security is a top priority in the ingestion layer, with measures in place to protect against various threats.
+
 ### Input Sanitization
+
+The `InputSanitizer` class ensures that all input content is sanitized, removing potentially harmful elements.
 
 ```python
 class InputSanitizer:
@@ -356,6 +427,8 @@ class InputSanitizer:
 - **Compliance**: Ensure regulatory compliance
 
 ## Integration Points
+
+The ingestion layer integrates with various downstream systems and external dependencies, facilitating seamless data flow.
 
 ### Downstream Systems
 

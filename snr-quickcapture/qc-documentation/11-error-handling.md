@@ -39,6 +39,10 @@ class ErrorSeverity(Enum):
     FATAL = "fatal"         # Unrecoverable errors
 ```
 
+**Purpose**: The `ErrorSeverity` enum classifies errors by their impact, guiding the system's response and logging strategy.
+
+**Usage**: Used throughout the system to tag errors with appropriate severity levels.
+
 ## Error Handling Architecture
 
 ### 1. Exception Hierarchy
@@ -94,6 +98,16 @@ class ResourceError(SystemError):
     pass
 ```
 
+**Purpose**: This hierarchy organizes exceptions by their nature and origin, facilitating targeted error handling and recovery.
+
+**Key Classes**:
+- `QuickCaptureError`: The base class for all custom exceptions, capturing common attributes like message, error code, and severity.
+- `InputError`: Represents errors in input processing, with specific subclasses for validation and parsing issues.
+- `ProcessingError`: Covers errors during content processing, including embedding and classification failures.
+- `SystemError`: Encompasses system-level issues, such as configuration and resource errors.
+
+**Usage**: These exceptions are raised and caught throughout the system to manage error conditions effectively.
+
 ### 2. Error Context and Metadata
 
 ```python
@@ -114,6 +128,14 @@ class ErrorInfo:
         self.timestamp = datetime.now()
         self.error_id = str(uuid.uuid4())
 ```
+
+**Purpose**: These classes capture detailed information about errors, including their context and metadata, to aid in debugging and analysis.
+
+**Key Attributes**:
+- `ErrorContext`: Stores contextual information about the error, such as the component and operation involved.
+- `ErrorInfo`: Combines the error and its context with additional metadata like stack trace and timestamps.
+
+**Usage**: Instances are created when errors occur, providing structured data for logging and analysis.
 
 ## Error Handling Patterns
 
@@ -159,6 +181,13 @@ class ErrorHandler:
         except Exception as e:
             return self.handle_unexpected_error(e, context)
 ```
+
+**Purpose**: This pattern ensures that specific exceptions are caught and handled appropriately, allowing for targeted recovery actions.
+
+**Key Methods**:
+- `handle_note_processing`: Manages the entire note processing workflow, catching and handling specific errors as they arise.
+
+**Usage**: Used in scenarios where multiple potential error types need distinct handling strategies.
 
 ### 2. Error Recovery Strategies
 
@@ -249,6 +278,15 @@ class ErrorRecoveryManager:
             )
 ```
 
+**Purpose**: These strategies provide mechanisms to recover from specific error types, enhancing system resilience.
+
+**Key Methods**:
+- `recover_from_validation_error`: Attempts to fix validation issues and retry processing.
+- `recover_from_embedding_error`: Uses alternative models to recover from embedding failures.
+- `recover_from_storage_error`: Switches to alternative storage solutions when primary storage fails.
+
+**Usage**: Implemented in scenarios where recovery from errors is possible and desirable.
+
 ### 3. Circuit Breaker Pattern
 
 ```python
@@ -309,6 +347,14 @@ class CircuitBreakerManager:
         return self.circuit_breakers[component_name]
 ```
 
+**Purpose**: The circuit breaker pattern prevents system overload by halting operations that consistently fail, allowing time for recovery.
+
+**Key Classes**:
+- `CircuitBreaker`: Manages the state of the circuit (closed, open, half_open) and controls execution based on failure history.
+- `CircuitBreakerManager`: Manages multiple circuit breakers for different components.
+
+**Usage**: Applied to critical operations where repeated failures could degrade system performance.
+
 ## Error Reporting and Logging
 
 ### 1. Structured Error Logging
@@ -351,6 +397,13 @@ class ErrorLogger:
         else:
             self.logger.info(json.dumps(error_info))
 ```
+
+**Purpose**: Provides a structured approach to logging errors, capturing detailed information for analysis and debugging.
+
+**Key Methods**:
+- `log_error`: Logs errors with structured data, differentiating by severity level.
+
+**Usage**: Used throughout the system to log errors consistently and informatively.
 
 ### 2. Error Metrics Collection
 
@@ -400,6 +453,14 @@ class ErrorMetricsCollector:
         
         return summary
 ```
+
+**Purpose**: Collects and summarizes error metrics, providing insights into error trends and system health.
+
+**Key Methods**:
+- `record_error`: Updates metrics for each error occurrence.
+- `get_error_summary`: Provides a summary of error statistics, including recent trends.
+
+**Usage**: Used to monitor error patterns and inform system improvements.
 
 ## Error Response Formats
 
@@ -456,6 +517,14 @@ class ErrorResponse:
         }
 ```
 
+**Purpose**: Provides a standardized format for error responses, including suggestions for resolution.
+
+**Key Methods**:
+- `get_error_suggestions`: Offers potential solutions based on error type.
+- `to_dict`: Converts the error response to a dictionary for easy serialization.
+
+**Usage**: Used in API responses to communicate error details and resolution steps.
+
 ### 2. API Error Responses
 
 ```python
@@ -503,6 +572,14 @@ class APIErrorHandler:
         
         return self.handle_api_error(generic_error, context)
 ```
+
+**Purpose**: Manages API error responses, mapping errors to HTTP status codes and logging them for analysis.
+
+**Key Methods**:
+- `handle_api_error`: Converts errors to JSON responses with appropriate status codes.
+- `handle_unexpected_error`: Provides a fallback for unanticipated errors.
+
+**Usage**: Used in API endpoints to handle and respond to errors consistently.
 
 ## Error Prevention Strategies
 
@@ -555,6 +632,14 @@ class InputValidator:
         return True
 ```
 
+**Purpose**: Ensures that input data meets predefined standards, preventing invalid data from entering the system.
+
+**Key Methods**:
+- `validate_note_input`: Validates input data against rules, returning errors and warnings.
+- `is_valid_content_format`: Checks for prohibited patterns in content.
+
+**Usage**: Applied during data ingestion to filter out invalid inputs.
+
 ### 2. Resource Monitoring
 
 ```python
@@ -606,6 +691,14 @@ class ResourceStatus:
         return len(self.errors) == 0
 ```
 
+**Purpose**: Monitors system resources to prevent performance degradation and ensure availability.
+
+**Key Methods**:
+- `check_system_resources`: Evaluates CPU, memory, and disk usage against thresholds.
+- `add_error` and `add_warning`: Record resource-related issues.
+
+**Usage**: Used to maintain system health and prevent resource exhaustion.
+
 ## Error Testing
 
 ### 1. Error Scenario Testing
@@ -652,7 +745,14 @@ class ErrorScenarioTester:
         pass
 ```
 
-This comprehensive error handling documentation provides the foundation for building robust, reliable, and user-friendly error handling throughout the QuickCapture system. 
+**Purpose**: Validates the system's error handling capabilities by simulating various error scenarios.
+
+**Key Methods**:
+- `test_validation_errors`: Simulates input validation failures to ensure proper handling.
+- `test_processing_errors`: Placeholder for testing processing-related errors.
+- `test_recovery_mechanisms`: Placeholder for testing recovery strategies.
+
+**Usage**: Used during development and testing to ensure robust error handling. 
 noteId: "ec644ca064c011f0970d05fa391d7ad1"
 tags: []
 

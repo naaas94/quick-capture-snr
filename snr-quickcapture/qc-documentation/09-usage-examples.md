@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document provides practical examples of how to use QuickCapture for various note-taking and knowledge management scenarios. Each example includes the input, expected output, and explanation of the processing steps.
+This document provides practical examples of how to use QuickCapture for various note-taking and knowledge management scenarios. Each example includes the input, expected output, and explanation of the processing steps, with detailed descriptions of the underlying scripts and functions involved.
 
 ## Basic Usage Examples
 
@@ -22,12 +22,12 @@ Processing time: 1.2s
 ```
 
 #### Processing Steps
-1. **Input Parsing**: CLI text input is parsed and validated
-2. **Preprocessing**: Text is cleaned and normalized
-3. **Embedding**: Content is converted to semantic vector
-4. **Classification**: Content is classified as "work" category
-5. **Tagging**: Automatic tags are generated based on content
-6. **Storage**: Note is stored in work storage with vector embedding
+1. **Input Parsing**: The input text is parsed using the `parse_note_input` function from `parse_input.py`. This function extracts tags, note body, and optional comments, and calculates semantic density.
+2. **Preprocessing**: Text is cleaned and normalized to ensure consistency and remove unnecessary characters.
+3. **Embedding**: The content is converted to a semantic vector for efficient storage and retrieval.
+4. **Classification**: The content is classified into the "work" category using the `classify_content_type` function, which analyzes text patterns and tags.
+5. **Tagging**: Automatic tags are generated based on content analysis, leveraging the `normalize_tags` function.
+6. **Storage**: The note is stored in the SQLite database using the `store_note` method from `storage_engine.py`, which ensures atomic operations and data integrity.
 
 ### 2. File-Based Note Processing
 
@@ -65,6 +65,13 @@ Tags: [project, meeting, sprint, authentication, documentation]
 Processing time: 2.1s
 ```
 
+#### Processing Steps
+1. **File Reading**: The input file is read, and its content is passed to the `parse_note_input` function for parsing.
+2. **Input Parsing**: Similar to simple note addition, the content is parsed into structured components.
+3. **Preprocessing and Embedding**: The content undergoes preprocessing and is converted into a semantic vector.
+4. **Classification and Tagging**: The content is classified, and tags are generated based on the parsed data.
+5. **Storage**: The note is stored in the database, with metadata indicating its source as a file.
+
 ### 3. Research Note with Metadata
 
 #### Input
@@ -94,6 +101,12 @@ Classification: research
 Tags: [machine-learning, nlp, research, transformers, semantics]
 Processing time: 1.8s
 ```
+
+#### Processing Steps
+1. **JSON Parsing**: The input JSON is parsed to extract content, title, tags, and metadata.
+2. **Input Parsing**: The content is parsed using `parse_note_input`, and semantic density is calculated.
+3. **Classification and Tagging**: The content is classified as "research", and tags are generated based on the metadata and content.
+4. **Storage**: The note, along with its metadata, is stored in the database using `store_note`, ensuring all relevant information is captured.
 
 ## Advanced Usage Examples
 
@@ -169,6 +182,12 @@ for result in results:
 ✓ batch_notes/work/meeting1.txt -> 1fb4178064c011f0970d05fa391d7ad1
 ```
 
+#### Processing Steps
+1. **Directory Traversal**: The script traverses the specified directory to find all text files.
+2. **File Reading and Parsing**: Each file is read, and its content is parsed using `parse_note_input`.
+3. **Batch Processing**: The `QuickCaptureOrchestrator` processes each note, classifying and tagging it based on its content and directory context.
+4. **Storage**: Each note is stored in the database, with results logged for success or failure.
+
 ### 5. API Integration
 
 #### REST API Usage
@@ -212,6 +231,11 @@ try:
 except Exception as e:
     print(f"Error: {e}")
 ```
+
+#### Processing Steps
+1. **API Request**: A POST request is sent to the QuickCapture API with the note content, title, and tags.
+2. **Server Processing**: The server processes the note using the same pipeline as the CLI, including parsing, validation, and storage.
+3. **Response Handling**: The API response is parsed to extract the note ID and any errors encountered.
 
 ### 6. Custom Classification Rules
 
@@ -258,6 +282,11 @@ result = orchestrator.process_note({
 print(f"Category: {result.classification.primary_category}")
 print(f"Confidence: {result.classification.confidence_score}")
 ```
+
+#### Processing Steps
+1. **Configuration Loading**: Custom classification rules are loaded from a YAML file using the `ConfigurationManager`.
+2. **Note Processing**: The `QuickCaptureOrchestrator` processes the note, applying custom rules to classify the content.
+3. **Classification and Confidence**: The note is classified based on the custom rules, and the confidence score is calculated.
 
 ## Integration Examples
 
@@ -315,6 +344,11 @@ def get_note(note_id):
 if __name__ == '__main__':
     app.run(debug=True, port=5000)
 ```
+
+#### Processing Steps
+1. **API Endpoint Definition**: Flask routes are defined for creating and retrieving notes via the API.
+2. **Request Handling**: Incoming requests are parsed, and the note content is processed using the `QuickCaptureOrchestrator`.
+3. **Response Generation**: The API returns a JSON response with the note ID, classification, and processing time.
 
 ### 8. Database Integration
 
@@ -394,6 +428,11 @@ for note in research_notes:
     print(f"ID: {note[0]}, Title: {note[2]}")
 ```
 
+#### Processing Steps
+1. **Database Initialization**: The SQLite database is initialized with the necessary tables for storing notes.
+2. **Note Processing**: Notes are processed using the `QuickCaptureOrchestrator`, which handles parsing, validation, and classification.
+3. **Storage and Retrieval**: Processed notes are stored in the database, and retrieval functions allow querying by category.
+
 ## Error Handling Examples
 
 ### 9. Error Handling and Recovery
@@ -459,6 +498,11 @@ except Exception as e:
     print(f"Failed: {e}")
 ```
 
+#### Processing Steps
+1. **Error Handling**: The function attempts to process a note with retries, handling validation and processing errors.
+2. **Validation Fixes**: Common validation issues are addressed by modifying the content, such as removing HTML tags and ensuring minimum length.
+3. **Retry Logic**: The function retries processing up to a specified number of attempts, with exponential backoff for processing errors.
+
 ### 10. Monitoring and Logging
 
 #### Comprehensive Logging
@@ -514,6 +558,11 @@ try:
 except Exception as e:
     print(f"Processing failed: {e}")
 ```
+
+#### Processing Steps
+1. **Logging Setup**: The logging system is configured to capture detailed information about the processing steps and outcomes.
+2. **Note Processing**: The note is processed using the `QuickCaptureOrchestrator`, with metrics collected for success and failure cases.
+3. **Error Handling**: Any exceptions are logged, and metrics are recorded for analysis and monitoring.
 
 ## Performance Examples
 
@@ -575,6 +624,11 @@ results = batch_process_with_progress(contents)
 successful = sum(1 for r in results if r['success'])
 print(f"Processed {len(results)} notes: {successful} successful, {len(results) - successful} failed")
 ```
+
+#### Processing Steps
+1. **Concurrent Processing**: Notes are processed concurrently using a thread pool, improving throughput and efficiency.
+2. **Progress Tracking**: The `tqdm` library is used to display a progress bar, providing real-time feedback on processing status.
+3. **Result Collection**: Results are collected for each note, including success status and any errors encountered.
 
 These examples demonstrate the flexibility and power of QuickCapture for various use cases, from simple note-taking to complex batch processing and system integration scenarios. 
 noteId: "87ad5ef064c011f0970d05fa391d7ad1"

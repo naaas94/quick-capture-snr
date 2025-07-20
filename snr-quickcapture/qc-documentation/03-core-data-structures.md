@@ -2,51 +2,70 @@
 
 ## Overview
 
-QuickCapture uses a well-defined set of data structures to represent notes, metadata, and system state. These structures ensure consistency, type safety, and efficient data processing throughout the system.
+QuickCapture employs a robust set of data structures to manage notes, metadata, and system state. These structures are designed to maintain consistency, ensure type safety, and facilitate efficient data processing across the system.
 
 ## Primary Data Models
 
 ### Note Structure
 
-The core data structure representing a note in the system:
+The `Note` class is the fundamental data structure representing a note within the system. It encapsulates all necessary information about a note, including its content, metadata, and classification details.
 
 ```python
 class Note:
-    note_id: str              # Unique identifier
-    content: str              # Main note content
-    title: Optional[str]      # Note title (optional)
-    tags: List[str]           # Associated tags
-    metadata: Dict[str, Any]  # Additional metadata
-    created_at: datetime      # Creation timestamp
-    updated_at: datetime      # Last update timestamp
-    embedding: Optional[List[float]]  # Semantic embedding vector
-    category: Optional[str]   # Assigned category
-    confidence_score: float   # Classification confidence
-    source: Optional[str]     # Source of the note
-    quality_score: float      # Content quality assessment
+    note_id: str              # Unique identifier for the note
+    content: str              # Main content of the note
+    title: Optional[str]      # Optional title of the note
+    tags: List[str]           # List of tags associated with the note
+    metadata: Dict[str, Any]  # Additional metadata as key-value pairs
+    created_at: datetime      # Timestamp of note creation
+    updated_at: datetime      # Timestamp of the last update
+    embedding: Optional[List[float]]  # Semantic embedding vector for the note
+    category: Optional[str]   # Category assigned to the note
+    confidence_score: float   # Confidence score of the note's classification
+    source: Optional[str]     # Source from which the note was derived
+    quality_score: float      # Assessment of the note's content quality
 ```
+
+**Purpose**: The `Note` class serves as the primary container for note data, supporting operations such as storage, retrieval, and processing.
+
+**Key Attributes**:
+- `note_id`: Ensures each note is uniquely identifiable.
+- `content`: Holds the main textual content of the note.
+- `embedding`: Used for semantic similarity and search operations.
+
+**Usage**: Instances of `Note` are created and manipulated throughout the system to represent and manage individual notes.
 
 ### Metadata Structure
 
-Extended information about notes:
+The `NoteMetadata` class provides extended information about a note, focusing on its origin, processing, and analysis results.
 
 ```python
 class NoteMetadata:
-    author: Optional[str]     # Note author
-    source_type: str          # Type of source (file, api, manual)
-    file_path: Optional[str]  # Original file location
-    processing_time: float    # Processing duration
-    validation_status: str    # Validation result
-    error_messages: List[str] # Any processing errors
-    word_count: int           # Content length
-    language: Optional[str]   # Detected language
+    author: Optional[str]     # Author of the note
+    source_type: str          # Type of source (e.g., file, API, manual)
+    file_path: Optional[str]  # Path to the original file, if applicable
+    processing_time: float    # Time taken to process the note
+    validation_status: str    # Result of the note's validation
+    error_messages: List[str] # List of errors encountered during processing
+    word_count: int           # Number of words in the note
+    language: Optional[str]   # Detected language of the note
     sentiment: Optional[str]  # Sentiment analysis result
-    entities: List[str]       # Named entities found
+    entities: List[str]       # Named entities identified in the note
 ```
+
+**Purpose**: This class captures metadata that provides context and insights into the note's lifecycle and content analysis.
+
+**Key Attributes**:
+- `processing_time`: Useful for performance monitoring and optimization.
+- `validation_status`: Indicates the success or failure of validation checks.
+
+**Usage**: `NoteMetadata` is typically associated with a `Note` to provide additional context and processing details.
 
 ## Configuration Data Structures
 
 ### Grammar Rules Configuration
+
+The grammar rules configuration defines validation and content rules for notes, ensuring they meet specific criteria before processing.
 
 ```yaml
 grammar_rules:
@@ -66,7 +85,17 @@ grammar_rules:
       action: "clean"
 ```
 
+**Purpose**: To enforce content standards and prevent invalid or harmful data from entering the system.
+
+**Key Rules**:
+- `content_length`: Ensures notes have a reasonable length.
+- `html_stripping`: Cleans HTML tags from note content.
+
+**Usage**: Applied during the note validation phase to maintain data integrity.
+
 ### Semantic Validation Configuration
+
+This configuration manages the parameters for semantic validation, including embedding and classification settings.
 
 ```yaml
 semantic_validation:
@@ -81,7 +110,17 @@ semantic_validation:
     fallback_category: "general"
 ```
 
+**Purpose**: To configure the semantic analysis and classification of notes, enhancing their categorization and retrieval.
+
+**Key Parameters**:
+- `similarity_threshold`: Determines the cutoff for semantic similarity.
+- `confidence_threshold`: Sets the minimum confidence for classification acceptance.
+
+**Usage**: Utilized during the semantic processing of notes to ensure accurate classification and similarity assessments.
+
 ### Storage Configuration
+
+Defines the storage mechanisms for notes, including vector storage and file storage configurations.
 
 ```yaml
 storage_config:
@@ -100,9 +139,19 @@ storage_config:
     path: "./storage/metadata.db"
 ```
 
+**Purpose**: To specify how and where notes and their metadata are stored, ensuring data persistence and accessibility.
+
+**Key Components**:
+- `vector_store`: Manages semantic vectors for efficient retrieval.
+- `metadata_store`: Uses SQLite for structured metadata storage.
+
+**Usage**: Configurations are applied during system initialization to set up storage paths and options.
+
 ## Processing Data Structures
 
 ### Processing Pipeline State
+
+The `ProcessingState` class tracks the state of a note as it moves through the processing pipeline.
 
 ```python
 class ProcessingState:
@@ -116,7 +165,17 @@ class ProcessingState:
     metrics: Dict[str, Any]
 ```
 
+**Purpose**: To monitor and report the progress and status of note processing, aiding in debugging and performance analysis.
+
+**Key Attributes**:
+- `stage`: Indicates the current phase of processing.
+- `metrics`: Collects performance data for analysis.
+
+**Usage**: Instances are updated as notes progress through different processing stages.
+
 ### Validation Results
+
+The `ValidationResult` class encapsulates the outcome of note validation, including errors and warnings.
 
 ```python
 class ValidationResult:
@@ -133,7 +192,17 @@ class ValidationError:
     code: str                 # Error code for programmatic handling
 ```
 
+**Purpose**: To provide a comprehensive report on the validation process, highlighting any issues that need attention.
+
+**Key Attributes**:
+- `is_valid`: A boolean indicating the overall success of validation.
+- `errors`: Detailed information on validation failures.
+
+**Usage**: Used to assess the validity of notes before further processing.
+
 ### Classification Results
+
+The `ClassificationResult` class records the results of note classification, including primary and alternative categories.
 
 ```python
 class ClassificationResult:
@@ -145,9 +214,19 @@ class ClassificationResult:
     model_version: str        # Model used for classification
 ```
 
+**Purpose**: To document the classification outcome, providing insights into the decision-making process.
+
+**Key Attributes**:
+- `primary_category`: The main category assigned to the note.
+- `reasoning`: Explains the rationale behind the classification.
+
+**Usage**: Results are used to categorize notes and inform subsequent actions.
+
 ## Storage Data Structures
 
 ### Vector Store Entry
+
+The `VectorEntry` class represents an entry in the vector store, linking semantic vectors to their source notes.
 
 ```python
 class VectorEntry:
@@ -158,7 +237,17 @@ class VectorEntry:
     source_note_id: str
 ```
 
+**Purpose**: To facilitate efficient semantic search and retrieval by storing vector representations of notes.
+
+**Key Attributes**:
+- `vector`: The semantic representation of the note.
+- `source_note_id`: Links the vector to its originating note.
+
+**Usage**: Entries are created and queried during semantic operations.
+
 ### File Storage Entry
+
+The `FileEntry` class manages file-related metadata, ensuring integrity and traceability of stored files.
 
 ```python
 class FileEntry:
@@ -171,9 +260,19 @@ class FileEntry:
     metadata: Dict[str, Any]
 ```
 
+**Purpose**: To track file attributes and ensure data integrity through hashing and metadata.
+
+**Key Attributes**:
+- `content_hash`: Verifies the integrity of the file content.
+- `metadata`: Stores additional file-related information.
+
+**Usage**: Used to manage and verify files within the storage system.
+
 ## Observability Data Structures
 
 ### Metrics Data
+
+The `MetricsData` class captures performance and usage metrics, supporting system monitoring and optimization.
 
 ```python
 class MetricsData:
@@ -185,7 +284,17 @@ class MetricsData:
     source: str
 ```
 
+**Purpose**: To provide a structured format for recording and analyzing system metrics.
+
+**Key Attributes**:
+- `metric_name`: Identifies the specific metric being recorded.
+- `value`: The measured value of the metric.
+
+**Usage**: Metrics are collected and analyzed to monitor system health and performance.
+
 ### Health Status
+
+The `HealthStatus` class provides a snapshot of the system's health, indicating the status of various components.
 
 ```python
 class HealthStatus:
@@ -197,7 +306,17 @@ class HealthStatus:
     details: Dict[str, Any]
 ```
 
+**Purpose**: To assess and report the operational status of system components, aiding in maintenance and troubleshooting.
+
+**Key Attributes**:
+- `status`: Indicates the health of the component.
+- `error_count`: Tracks the number of errors encountered.
+
+**Usage**: Health statuses are monitored to ensure system reliability and prompt issue resolution.
+
 ### Performance Metrics
+
+The `PerformanceMetrics` class records key performance indicators, supporting analysis and optimization efforts.
 
 ```python
 class PerformanceMetrics:
@@ -209,9 +328,19 @@ class PerformanceMetrics:
     timestamp: datetime
 ```
 
+**Purpose**: To provide detailed performance data for system analysis and improvement.
+
+**Key Attributes**:
+- `throughput`: Measures the system's processing capacity.
+- `error_rate`: Indicates the frequency of errors.
+
+**Usage**: Metrics are used to evaluate and enhance system performance.
+
 ## API Data Structures
 
 ### Request/Response Models
+
+The `NoteRequest` and `NoteResponse` classes define the structure of API requests and responses, ensuring consistency and validation.
 
 ```python
 class NoteRequest:
@@ -229,7 +358,17 @@ class NoteResponse:
     errors: List[str]
 ```
 
+**Purpose**: To standardize the format of data exchanged via the API, facilitating communication and integration.
+
+**Key Attributes**:
+- `NoteRequest`: Validates incoming data for note creation.
+- `NoteResponse`: Provides feedback on the processing outcome.
+
+**Usage**: Used in API endpoints to handle note-related operations.
+
 ### Batch Processing
+
+The `BatchRequest` and `BatchResponse` classes support batch operations, enabling efficient processing of multiple notes.
 
 ```python
 class BatchRequest:
@@ -247,34 +386,62 @@ class BatchResponse:
     processing_time: float
 ```
 
+**Purpose**: To manage and report on batch processing tasks, optimizing throughput and resource utilization.
+
+**Key Attributes**:
+- `priority`: Allows prioritization of batch tasks.
+- `results`: Summarizes the outcome of batch processing.
+
+**Usage**: Employed in scenarios requiring the processing of multiple notes in a single operation.
+
 ## Data Validation Rules
 
 ### Content Validation
 
-- Minimum content length: 10 characters
-- Maximum content length: 10,000 characters
-- Required fields: content, note_id
-- Prohibited content: HTML tags, script tags
-- Language detection: Automatic language identification
+Content validation rules ensure that notes meet predefined standards, preventing invalid data from entering the system.
+
+- **Minimum content length**: 10 characters
+- **Maximum content length**: 10,000 characters
+- **Required fields**: `content`, `note_id`
+- **Prohibited content**: HTML tags, script tags
+- **Language detection**: Automatic language identification
+
+**Purpose**: To maintain data quality and integrity by enforcing content standards.
+
+**Usage**: Applied during the note validation phase to filter out non-compliant data.
 
 ### Metadata Validation
 
-- Timestamp format: ISO 8601
-- UUID format for note_id
-- Tag format: alphanumeric with hyphens
-- Category validation: Must be from predefined list
-- Confidence score: 0.0 to 1.0 range
+Metadata validation rules ensure that metadata adheres to expected formats and constraints.
+
+- **Timestamp format**: ISO 8601
+- **UUID format for note_id**
+- **Tag format**: Alphanumeric with hyphens
+- **Category validation**: Must be from a predefined list
+- **Confidence score**: 0.0 to 1.0 range
+
+**Purpose**: To ensure metadata consistency and reliability.
+
+**Usage**: Enforced during metadata processing to validate and correct metadata entries.
 
 ### Storage Validation
 
-- File size limits: Configurable per storage type
-- Path validation: Secure path construction
-- Hash verification: Content integrity checks
-- Backup validation: Backup integrity verification
+Storage validation rules protect data integrity and security within the storage system.
+
+- **File size limits**: Configurable per storage type
+- **Path validation**: Secure path construction
+- **Hash verification**: Content integrity checks
+- **Backup validation**: Backup integrity verification
+
+**Purpose**: To safeguard stored data against corruption and unauthorized access.
+
+**Usage**: Implemented during storage operations to verify data integrity and security.
 
 ## Data Serialization
 
 ### JSON Format
+
+The JSON format provides a standardized way to serialize note data for storage and transmission.
 
 ```json
 {
@@ -293,7 +460,13 @@ class BatchResponse:
 }
 ```
 
+**Purpose**: To facilitate data exchange and storage in a widely supported format.
+
+**Usage**: Used for API communication and data persistence.
+
 ### YAML Format
+
+The YAML format offers a human-readable alternative for data serialization, often used in configuration files.
 
 ```yaml
 note_id: uuid-string
@@ -311,23 +484,37 @@ category: research
 confidence_score: 0.85
 ```
 
+**Purpose**: To provide a clear and concise format for configuration and data representation.
+
+**Usage**: Commonly used in configuration files and documentation.
+
 ## Data Migration and Versioning
 
 ### Version Control
 
-- Schema version tracking
-- Backward compatibility support
-- Migration scripts for data updates
-- Version validation on startup
+Version control mechanisms track schema changes and ensure backward compatibility.
+
+- **Schema version tracking**
+- **Backward compatibility support**
+- **Migration scripts for data updates**
+- **Version validation on startup**
+
+**Purpose**: To manage changes to data structures and ensure smooth transitions between versions.
+
+**Usage**: Applied during system updates and migrations to maintain data integrity.
 
 ### Data Migration
 
-- Automatic migration detection
-- Incremental migration support
-- Rollback capabilities
-- Migration logging and monitoring 
-noteId: "c229dd2064bf11f0970d05fa391d7ad1"
-tags: []
+Data migration processes handle the transition of data between different schema versions.
+
+- **Automatic migration detection**
+- **Incremental migration support**
+- **Rollback capabilities**
+- **Migration logging and monitoring**
+
+**Purpose**: To facilitate seamless data transitions and minimize disruption during updates.
+
+**Usage**: Executed during system upgrades to migrate data to new formats.
 
 ---
 

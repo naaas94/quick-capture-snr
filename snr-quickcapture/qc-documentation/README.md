@@ -11,7 +11,7 @@ This directory contains comprehensive documentation for the QuickCapture system,
 
 ### Configuration & Management
 - **[04-configuration-management.md](04-configuration-management.md)** - Configuration files and management
-- **[05-ingestion-layer.md](05-ingestion-layer.md)** - Input processing and validation
+- **[05-ingestion-layer.md](05-ingestion-layer.md)** - Input processing and validation, including detailed descriptions of the `InputParser`, `InputValidator`, and `ContentPreprocessor` classes. The `InputParser` handles various input formats such as text files, API requests, CLI inputs, and streaming data, providing methods for parsing each type. The `InputValidator` ensures data quality through comprehensive validation rules covering content, format, and security. The `ContentPreprocessor` prepares content for semantic processing by cleaning, normalizing, and segmenting it. The ingestion layer also includes robust error handling, performance optimization through batch processing and caching, and security measures like input sanitization and access control.
 - **[06-embedding-layer.md](06-embedding-layer.md)** - Vector embeddings and semantic processing
 - **[07-routing-layer.md](07-routing-layer.md)** - Request routing and processing logic
 

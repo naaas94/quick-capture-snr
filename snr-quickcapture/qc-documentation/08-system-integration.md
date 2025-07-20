@@ -78,6 +78,19 @@ class QuickCaptureOrchestrator:
             )
 ```
 
+**Purpose**: The `QuickCaptureOrchestrator` class is responsible for managing the entire lifecycle of note processing, from input parsing to storage and metrics recording.
+
+**Key Components**:
+- `InputParser`: Parses raw input data into a structured format.
+- `NoteValidator`: Validates the parsed input against predefined rules.
+- `ContentPreprocessor`: Prepares the content for further processing by cleaning and normalizing it.
+- `EmbeddingGenerator`: Generates semantic embeddings for the content.
+- `ContentClassifier`: Classifies the content into predefined categories.
+- `StorageEngine`: Stores the processed note and its metadata.
+- `MetricsCollector`: Records processing metrics for monitoring and optimization.
+
+**Usage**: This class is instantiated with a system configuration and used to process individual notes through its `process_note` method.
+
 #### Pipeline Configuration
 
 ```python
@@ -117,6 +130,14 @@ class ProcessingPipeline:
         )
 ```
 
+**Purpose**: The `ProcessingPipeline` class manages the sequential execution of processing stages, ensuring that each stage is completed successfully before moving to the next.
+
+**Key Attributes**:
+- `stages`: A list of processing stages to be executed.
+- `stage_results`: A dictionary storing the results of each stage.
+
+**Usage**: This class is used to execute a series of processing stages on input data, returning a `PipelineResult` that indicates the success or failure of the pipeline.
+
 ### 2. Component Integration Interfaces
 
 #### Standard Component Interface
@@ -152,6 +173,16 @@ class ProcessingResult:
     processing_time: float
 ```
 
+**Purpose**: The `ProcessingComponent` interface defines the standard methods that all processing components must implement, ensuring consistency and interoperability.
+
+**Key Methods**:
+- `process`: Processes input data and returns a `ProcessingResult`.
+- `get_component_info`: Provides metadata and capabilities of the component.
+- `health_check`: Checks the health status of the component.
+- `cleanup`: Releases any resources held by the component.
+
+**Usage**: This interface is implemented by all components that participate in the processing pipeline.
+
 #### Component Registry
 
 ```python
@@ -180,6 +211,16 @@ class ComponentRegistry:
                     return False
         return True
 ```
+
+**Purpose**: The `ComponentRegistry` class manages the registration and retrieval of processing components, ensuring that all dependencies are satisfied.
+
+**Key Methods**:
+- `register_component`: Registers a new processing component.
+- `get_component`: Retrieves a component by name.
+- `get_dependencies`: Returns the dependencies of a component.
+- `validate_dependencies`: Checks that all component dependencies are satisfied.
+
+**Usage**: This class is used to manage the lifecycle of processing components and their dependencies.
 
 ### 3. Data Flow Coordination
 
@@ -218,6 +259,15 @@ class DataFlowManager:
         return self.flow_monitors[flow_name].get_metrics()
 ```
 
+**Purpose**: The `DataFlowManager` class coordinates the flow of data through various processing stages, ensuring efficient data routing and monitoring.
+
+**Key Methods**:
+- `create_data_flow`: Initializes a new data flow with specified stages.
+- `route_data`: Routes data through a specified flow.
+- `monitor_flow`: Monitors the performance of a data flow.
+
+**Usage**: This class is used to manage and monitor data flows within the system.
+
 #### Data Flow Configuration
 
 ```yaml
@@ -246,6 +296,15 @@ data_flows:
       max_workers: 4
       batch_size: 100
 ```
+
+**Purpose**: The data flow configuration defines the stages and error handling strategies for different data flows, ensuring robust and efficient processing.
+
+**Key Parameters**:
+- `stages`: Specifies the sequence of processing stages.
+- `error_handling`: Defines strategies for handling errors during processing.
+- `monitoring`: Configures monitoring and metrics collection for data flows.
+
+**Usage**: This configuration is used to set up and manage data flows within the system.
 
 ## API Integration
 
@@ -319,6 +378,15 @@ async def health_check():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 ```
+
+**Purpose**: The REST API interface provides endpoints for creating and retrieving notes, as well as checking system health.
+
+**Key Endpoints**:
+- `POST /notes`: Creates a new note and returns the processing result.
+- `GET /notes/{note_id}`: Retrieves a note by its ID.
+- `GET /health`: Performs a system health check.
+
+**Usage**: This interface is used by external clients to interact with the QuickCapture system.
 
 ### 2. CLI Interface
 
@@ -410,6 +478,15 @@ if __name__ == '__main__':
     cli()
 ```
 
+**Purpose**: The CLI interface provides command-line access to the QuickCapture system, allowing users to add and retrieve notes, and check system status.
+
+**Key Commands**:
+- `add`: Adds a new note, with options for input file, title, tags, and output format.
+- `get`: Retrieves a note by its ID.
+- `status`: Displays the current system status.
+
+**Usage**: This interface is used by users who prefer command-line interaction with the system.
+
 ## Event-Driven Integration
 
 ### 1. Event Bus
@@ -444,6 +521,14 @@ class Event:
         self.timestamp = timestamp or datetime.now()
         self.id = str(uuid.uuid4())
 ```
+
+**Purpose**: The `EventBus` class facilitates event-driven communication between components, allowing them to subscribe to and publish events.
+
+**Key Methods**:
+- `subscribe`: Registers a handler for a specific event type.
+- `publish`: Publishes an event to all registered handlers.
+
+**Usage**: This class is used to implement event-driven architecture within the system.
 
 ### 2. Event Handlers
 
@@ -485,6 +570,15 @@ class NoteProcessingEventHandler:
             data=note_data
         ))
 ```
+
+**Purpose**: The `NoteProcessingEventHandler` class handles events related to note processing, such as creation, completion, and failure.
+
+**Key Methods**:
+- `handle_note_created`: Handles the creation of a new note.
+- `handle_note_processed`: Handles the completion of note processing.
+- `handle_note_failed`: Handles note processing failures.
+
+**Usage**: This class is used to respond to note processing events and trigger additional actions.
 
 ## Configuration Integration
 
@@ -531,6 +625,16 @@ class ConfigurationManager:
             yaml.dump(self.configs[config_name], f, default_flow_style=False)
 ```
 
+**Purpose**: The `ConfigurationManager` class manages the loading, retrieval, and updating of system configuration files.
+
+**Key Methods**:
+- `load_all_configs`: Loads all configuration files from the specified path.
+- `get_config`: Retrieves a configuration by name.
+- `update_config`: Updates a configuration with new values.
+- `save_config`: Saves a configuration to a file.
+
+**Usage**: This class is used to manage system configurations and ensure they are up-to-date.
+
 ### 2. Environment Integration
 
 ```python
@@ -561,6 +665,15 @@ class EnvironmentManager:
         merged_config = deep_merge(base_config, env_overrides)
         return merged_config
 ```
+
+**Purpose**: The `EnvironmentManager` class manages environment-specific configurations, allowing the system to adapt to different deployment environments.
+
+**Key Methods**:
+- `detect_environment`: Detects the current environment (e.g., development, production).
+- `load_environment_overrides`: Loads configuration overrides for the current environment.
+- `get_environment_config`: Retrieves a merged configuration for the current environment.
+
+**Usage**: This class is used to manage environment-specific configurations and ensure the system operates correctly in different environments.
 
 ## Error Handling and Recovery
 
@@ -610,6 +723,15 @@ class SystemErrorHandler:
         self.error_counts[error_type] += 1
 ```
 
+**Purpose**: The `SystemErrorHandler` class handles system-wide errors, recording them and applying recovery strategies.
+
+**Key Methods**:
+- `handle_error`: Handles an error by recording it and applying a recovery strategy.
+- `apply_recovery_strategy`: Applies a predefined recovery strategy for a specific error type.
+- `record_error`: Records an error for monitoring purposes.
+
+**Usage**: This class is used to manage errors and ensure the system can recover from failures.
+
 ### 2. Circuit Breaker Integration
 
 ```python
@@ -641,6 +763,14 @@ class CircuitBreakerManager:
             circuit_breaker.record_failure()
             raise
 ```
+
+**Purpose**: The `CircuitBreakerManager` class manages circuit breakers for system components, preventing repeated failures from overwhelming the system.
+
+**Key Methods**:
+- `get_circuit_breaker`: Retrieves or creates a circuit breaker for a component.
+- `execute_with_circuit_breaker`: Executes a function with circuit breaker protection.
+
+**Usage**: This class is used to manage circuit breakers and protect the system from repeated failures.
 
 ## Performance and Monitoring
 
@@ -681,6 +811,14 @@ class PerformanceMonitor:
             }
         return summary
 ```
+
+**Purpose**: The `PerformanceMonitor` class records and summarizes the performance of system operations, providing insights for optimization.
+
+**Key Methods**:
+- `record_operation`: Records the performance of an operation.
+- `get_performance_summary`: Returns a summary of recorded performance metrics.
+
+**Usage**: This class is used to monitor system performance and identify areas for improvement.
 
 ### 2. Integration Testing
 
@@ -726,9 +864,15 @@ class IntegrationTestSuite:
         # Test data flow
         # Test error handling
         # Return test results
-``` 
-noteId: "5b95606064c011f0970d05fa391d7ad1"
-tags: []
+```
+
+**Purpose**: The `IntegrationTestSuite` class provides methods for testing the integration of system components and the full processing pipeline.
+
+**Key Methods**:
+- `test_full_pipeline`: Tests the complete processing pipeline with sample data.
+- `test_component_integration`: Tests the integration of individual components.
+
+**Usage**: This class is used to ensure that system components are correctly integrated and functioning as expected.
 
 ---
 

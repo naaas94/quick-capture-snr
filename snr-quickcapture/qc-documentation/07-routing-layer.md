@@ -15,19 +15,46 @@ The main routing engine that determines where content should be directed.
 ```python
 class ContentRouter:
     def __init__(self, routing_rules: List[RoutingRule], load_balancer: LoadBalancer):
+        """
+        Initialize the ContentRouter with routing rules and a load balancer.
+
+        Parameters:
+        - routing_rules (List[RoutingRule]): A list of routing rules to apply.
+        - load_balancer (LoadBalancer): A load balancer to distribute content.
+        """
         self.routing_rules = routing_rules
         self.load_balancer = load_balancer
         self.decision_cache = {}
     
     def route_content(self, content: ProcessedContent) -> RoutingDecision:
-        """Determine routing destination for content"""
+        """
+        Determine routing destination for content.
+
+        This method applies routing rules, checks system load, and considers content characteristics to make a routing decision.
+
+        Parameters:
+        - content (ProcessedContent): The content to be routed.
+
+        Returns:
+        - RoutingDecision: The decision on where to route the content.
+        """
         # Apply routing rules
         # Check system load
         # Consider content characteristics
         # Make routing decision
     
     def get_routing_options(self, content: ProcessedContent) -> List[RoutingOption]:
-        """Get available routing options for content"""
+        """
+        Get available routing options for content.
+
+        This method evaluates all possible routes, checks availability, calculates costs/benefits, and returns ranked options.
+
+        Parameters:
+        - content (ProcessedContent): The content for which to get routing options.
+
+        Returns:
+        - List[RoutingOption]: A list of ranked routing options.
+        """
         # Evaluate all possible routes
         # Check availability
         # Calculate costs/benefits
@@ -38,6 +65,18 @@ class ContentRouter:
 
 ```python
 class RoutingDecision:
+    """
+    Represents a routing decision for content.
+
+    Attributes:
+    - primary_route (str): The primary destination for the content.
+    - fallback_routes (List[str]): Backup destinations if the primary route fails.
+    - routing_reason (str): Explanation for the routing decision.
+    - confidence_score (float): Confidence in the routing decision.
+    - estimated_processing_time (float): Expected processing time for the content.
+    - priority (str): Priority level of the routing decision (high, normal, low).
+    - metadata (Dict[str, Any]): Additional routing information.
+    """
     primary_route: str                    # Primary destination
     fallback_routes: List[str]            # Backup destinations
     routing_reason: str                   # Explanation for routing
@@ -55,6 +94,18 @@ Manages and applies routing rules based on content characteristics.
 
 ```python
 class RoutingRule:
+    """
+    Defines a routing rule with conditions and actions.
+
+    Attributes:
+    - rule_id (str): Unique identifier for the rule.
+    - name (str): Name of the rule.
+    - conditions (List[RuleCondition]): Conditions that trigger the rule.
+    - actions (List[RuleAction]): Actions to perform when conditions are met.
+    - priority (int): Priority of the rule.
+    - enabled (bool): Whether the rule is enabled.
+    - description (str): Description of the rule.
+    """
     rule_id: str
     name: str
     conditions: List[RuleCondition]
@@ -64,12 +115,29 @@ class RoutingRule:
     description: str
 
 class RuleCondition:
+    """
+    Represents a condition in a routing rule.
+
+    Attributes:
+    - field (str): Content field to check.
+    - operator (str): Operator for comparison (equals, contains, regex, etc.).
+    - value (Any): Value to compare against.
+    - logical_operator (str): Logical operator for multiple conditions (AND, OR).
+    """
     field: str                           # Content field to check
     operator: str                        # equals, contains, regex, etc.
     value: Any                           # Value to compare against
     logical_operator: str                # AND, OR for multiple conditions
 
 class RuleAction:
+    """
+    Represents an action in a routing rule.
+
+    Attributes:
+    - action_type (str): Type of action (route_to, tag, transform, etc.).
+    - parameters (Dict[str, Any]): Action-specific parameters.
+    - priority (int): Action priority.
+    """
     action_type: str                     # route_to, tag, transform, etc.
     parameters: Dict[str, Any]           # Action-specific parameters
     priority: int                        # Action priority
@@ -115,6 +183,15 @@ Distributes content across available processing resources.
 
 ```python
 class LoadBalancer:
+    """
+    Implements load balancing strategies to distribute content.
+
+    Attributes:
+    - strategy (str): Load balancing strategy (round_robin, least_connections, etc.).
+    - destinations (List[Destination]): List of available destinations.
+    - current_index (int): Current index for round-robin selection.
+    - health_checker (HealthChecker): Checks the health of destinations.
+    """
     def __init__(self, strategy: str = "round_robin"):
         self.strategy = strategy
         self.destinations = []
@@ -122,7 +199,15 @@ class LoadBalancer:
         self.health_checker = HealthChecker()
     
     def select_destination(self, content: ProcessedContent) -> str:
-        """Select destination based on load balancing strategy"""
+        """
+        Select destination based on load balancing strategy.
+
+        Parameters:
+        - content (ProcessedContent): The content to be routed.
+
+        Returns:
+        - str: The selected destination.
+        """
         if self.strategy == "round_robin":
             return self._round_robin_select()
         elif self.strategy == "least_connections":
@@ -133,17 +218,32 @@ class LoadBalancer:
             return self._adaptive_select(content)
     
     def _round_robin_select(self) -> str:
-        """Round-robin selection"""
+        """
+        Round-robin selection.
+
+        Returns:
+        - str: The selected destination.
+        """
         destination = self.destinations[self.current_index]
         self.current_index = (self.current_index + 1) % len(self.destinations)
         return destination
     
     def _least_connections_select(self) -> str:
-        """Select destination with least active connections"""
+        """
+        Select destination with least active connections.
+
+        Returns:
+        - str: The selected destination.
+        """
         return min(self.destinations, key=lambda d: d.active_connections)
     
     def _weighted_select(self) -> str:
-        """Weighted selection based on capacity"""
+        """
+        Weighted selection based on capacity.
+
+        Returns:
+        - str: The selected destination.
+        """
         total_weight = sum(d.weight for d in self.destinations)
         random_value = random.uniform(0, total_weight)
         current_weight = 0
@@ -164,19 +264,42 @@ Classifies content to determine appropriate routing.
 
 ```python
 class ContentClassifier:
+    """
+    Classifies content for routing decisions using a classification model.
+
+    Attributes:
+    - model (ClassificationModel): The classification model used.
+    - categories (List[str]): List of categories from the model.
+    """
     def __init__(self, classification_model: ClassificationModel):
         self.model = classification_model
         self.categories = self.model.get_categories()
     
     def classify_content(self, content: ProcessedContent) -> ClassificationResult:
-        """Classify content for routing decisions"""
+        """
+        Classify content for routing decisions.
+
+        Parameters:
+        - content (ProcessedContent): The content to classify.
+
+        Returns:
+        - ClassificationResult: The result of the classification.
+        """
         # Extract features
         # Apply classification model
         # Calculate confidence scores
         # Return classification result
     
     def get_content_characteristics(self, content: ProcessedContent) -> ContentCharacteristics:
-        """Extract content characteristics for routing"""
+        """
+        Extract content characteristics for routing.
+
+        Parameters:
+        - content (ProcessedContent): The content to analyze.
+
+        Returns:
+        - ContentCharacteristics: The characteristics of the content.
+        """
         return ContentCharacteristics(
             length=len(content.text),
             language=content.language,
@@ -195,8 +318,19 @@ Routes content based on its characteristics and classification.
 
 ```python
 class ContentBasedRouter:
+    """
+    Routes content based on its category, size, and priority.
+    """
     def route_by_category(self, content: ProcessedContent) -> str:
-        """Route based on content category"""
+        """
+        Route based on content category.
+
+        Parameters:
+        - content (ProcessedContent): The content to route.
+
+        Returns:
+        - str: The destination based on category.
+        """
         category = content.classification.primary_category
         
         routing_map = {
@@ -209,7 +343,15 @@ class ContentBasedRouter:
         return routing_map.get(category, "general_storage")
     
     def route_by_size(self, content: ProcessedContent) -> str:
-        """Route based on content size"""
+        """
+        Route based on content size.
+
+        Parameters:
+        - content (ProcessedContent): The content to route.
+
+        Returns:
+        - str: The destination based on size.
+        """
         if content.length > 10000:
             return "batch_processor"
         elif content.length > 1000:
@@ -218,7 +360,15 @@ class ContentBasedRouter:
             return "fast_processor"
     
     def route_by_priority(self, content: ProcessedContent) -> str:
-        """Route based on content priority"""
+        """
+        Route based on content priority.
+
+        Parameters:
+        - content (ProcessedContent): The content to route.
+
+        Returns:
+        - str: The destination based on priority.
+        """
         if content.priority == "high":
             return "priority_queue"
         elif content.priority == "low":
@@ -233,11 +383,22 @@ Routes content based on system load and resource availability.
 
 ```python
 class LoadBasedRouter:
+    """
+    Routes content based on current system load and resource availability.
+    """
     def __init__(self, resource_monitor: ResourceMonitor):
         self.resource_monitor = resource_monitor
     
     def route_by_load(self, content: ProcessedContent) -> str:
-        """Route based on current system load"""
+        """
+        Route based on current system load.
+
+        Parameters:
+        - content (ProcessedContent): The content to route.
+
+        Returns:
+        - str: The destination based on system load.
+        """
         current_load = self.resource_monitor.get_system_load()
         
         if current_load.cpu_usage > 80:
@@ -250,7 +411,15 @@ class LoadBasedRouter:
             return "optimal_processor"
     
     def route_by_resource_availability(self, content: ProcessedContent) -> str:
-        """Route based on resource availability"""
+        """
+        Route based on resource availability.
+
+        Parameters:
+        - content (ProcessedContent): The content to route.
+
+        Returns:
+        - str: The destination based on resource availability.
+        """
         available_resources = self.resource_monitor.get_available_resources()
         
         if available_resources.gpu_available:
@@ -267,8 +436,19 @@ Routes content based on time constraints and deadlines.
 
 ```python
 class TimeBasedRouter:
+    """
+    Routes content based on processing deadlines and time of day.
+    """
     def route_by_deadline(self, content: ProcessedContent) -> str:
-        """Route based on processing deadlines"""
+        """
+        Route based on processing deadlines.
+
+        Parameters:
+        - content (ProcessedContent): The content to route.
+
+        Returns:
+        - str: The destination based on deadline.
+        """
         if content.deadline and content.deadline < datetime.now() + timedelta(hours=1):
             return "urgent_processor"
         elif content.deadline and content.deadline < datetime.now() + timedelta(hours=24):
@@ -277,7 +457,15 @@ class TimeBasedRouter:
             return "standard_processor"
     
     def route_by_time_of_day(self, content: ProcessedContent) -> str:
-        """Route based on time of day"""
+        """
+        Route based on time of day.
+
+        Parameters:
+        - content (ProcessedContent): The content to route.
+
+        Returns:
+        - str: The destination based on time of day.
+        """
         current_hour = datetime.now().hour
         
         if 9 <= current_hour <= 17:  # Business hours
@@ -292,6 +480,15 @@ class TimeBasedRouter:
 
 ```python
 class StorageDestination:
+    """
+    Represents a storage destination for content.
+
+    Attributes:
+    - name (str): Name of the storage destination.
+    - storage_type (str): Type of storage (e.g., vector_db, file_system).
+    - config (Dict[str, Any]): Configuration for the storage destination.
+    - health_status (str): Health status of the storage destination.
+    """
     def __init__(self, name: str, storage_type: str, config: Dict[str, Any]):
         self.name = name
         self.storage_type = storage_type
@@ -299,20 +496,36 @@ class StorageDestination:
         self.health_status = "healthy"
     
     def can_accept_content(self, content: ProcessedContent) -> bool:
-        """Check if destination can accept content"""
+        """
+        Check if destination can accept content.
+
+        Parameters:
+        - content (ProcessedContent): The content to check.
+
+        Returns:
+        - bool: True if the destination can accept the content, False otherwise.
+        """
         # Check capacity
         # Check health status
         # Check content compatibility
         # Check access permissions
     
     def get_processing_capacity(self) -> float:
-        """Get current processing capacity"""
+        """
+        Get current processing capacity.
+
+        Returns:
+        - float: The current processing capacity as a percentage.
+        """
         # Calculate available capacity
         # Consider current load
         # Factor in performance metrics
         return 0.8  # 80% capacity available
 
 class StorageDestinations:
+    """
+    Defines common storage destinations.
+    """
     RESEARCH_STORAGE = StorageDestination("research_storage", "vector_db", {...})
     PERSONAL_STORAGE = StorageDestination("personal_storage", "file_system", {...})
     WORK_STORAGE = StorageDestination("work_storage", "database", {...})
@@ -323,6 +536,16 @@ class StorageDestinations:
 
 ```python
 class ProcessingDestination:
+    """
+    Represents a processing destination for content.
+
+    Attributes:
+    - name (str): Name of the processing destination.
+    - processor_type (str): Type of processor (e.g., streaming, batch).
+    - config (Dict[str, Any]): Configuration for the processing destination.
+    - active_connections (int): Number of active connections.
+    - max_connections (int): Maximum number of connections allowed.
+    """
     def __init__(self, name: str, processor_type: str, config: Dict[str, Any]):
         self.name = name
         self.processor_type = processor_type
@@ -331,7 +554,15 @@ class ProcessingDestination:
         self.max_connections = config.get("max_connections", 100)
     
     def can_process_content(self, content: ProcessedContent) -> bool:
-        """Check if processor can handle content"""
+        """
+        Check if processor can handle content.
+
+        Parameters:
+        - content (ProcessedContent): The content to check.
+
+        Returns:
+        - bool: True if the processor can handle the content, False otherwise.
+        """
         return (
             self.active_connections < self.max_connections and
             self.health_status == "healthy" and
@@ -339,6 +570,9 @@ class ProcessingDestination:
         )
 
 class ProcessingDestinations:
+    """
+    Defines common processing destinations.
+    """
     FAST_PROCESSOR = ProcessingDestination("fast_processor", "streaming", {...})
     BATCH_PROCESSOR = ProcessingDestination("batch_processor", "batch", {...})
     GPU_PROCESSOR = ProcessingDestination("gpu_processor", "gpu_accelerated", {...})
@@ -351,15 +585,35 @@ class ProcessingDestinations:
 
 ```python
 class RoutingErrorHandler:
+    """
+    Handles routing failures with fallback strategies.
+    """
     def handle_routing_failure(self, content: ProcessedContent, error: RoutingError) -> str:
-        """Handle routing failures with fallback strategies"""
+        """
+        Handle routing failures and attempt fallback routing.
+
+        Parameters:
+        - content (ProcessedContent): The content that failed to route.
+        - error (RoutingError): The error encountered during routing.
+
+        Returns:
+        - str: The fallback destination.
+        """
         # Log routing error
         # Attempt fallback routing
         # Notify monitoring system
         # Return fallback destination
     
     def get_fallback_destination(self, content: ProcessedContent) -> str:
-        """Get fallback destination for content"""
+        """
+        Get fallback destination for content.
+
+        Parameters:
+        - content (ProcessedContent): The content to route.
+
+        Returns:
+        - str: The most suitable fallback destination.
+        """
         # Check available destinations
         # Select most suitable fallback
         # Consider content characteristics
@@ -370,6 +624,16 @@ class RoutingErrorHandler:
 
 ```python
 class CircuitBreaker:
+    """
+    Implements the circuit breaker pattern to manage failures.
+
+    Attributes:
+    - failure_threshold (int): Number of failures before opening the circuit.
+    - timeout (int): Time in seconds before attempting to close the circuit.
+    - failure_count (int): Current count of failures.
+    - last_failure_time (float): Timestamp of the last failure.
+    - state (str): Current state of the circuit (closed, open, half_open).
+    """
     def __init__(self, failure_threshold: int = 5, timeout: int = 60):
         self.failure_threshold = failure_threshold
         self.timeout = timeout
@@ -378,7 +642,12 @@ class CircuitBreaker:
         self.state = "closed"  # closed, open, half_open
     
     def can_execute(self) -> bool:
-        """Check if circuit breaker allows execution"""
+        """
+        Check if circuit breaker allows execution.
+
+        Returns:
+        - bool: True if execution is allowed, False otherwise.
+        """
         if self.state == "closed":
             return True
         elif self.state == "open":
@@ -390,7 +659,9 @@ class CircuitBreaker:
             return True
     
     def record_failure(self):
-        """Record a failure"""
+        """
+        Record a failure and update the circuit state.
+        """
         self.failure_count += 1
         self.last_failure_time = time.time()
         
@@ -398,7 +669,9 @@ class CircuitBreaker:
             self.state = "open"
     
     def record_success(self):
-        """Record a success"""
+        """
+        Record a success and reset the circuit state.
+        """
         self.failure_count = 0
         self.state = "closed"
 ```
@@ -409,15 +682,29 @@ class CircuitBreaker:
 
 ```python
 class RoutingMetrics:
+    """
+    Collects and records routing decision metrics.
+    """
     def record_routing_decision(self, content: ProcessedContent, decision: RoutingDecision):
-        """Record routing decision metrics"""
+        """
+        Record metrics for a routing decision.
+
+        Parameters:
+        - content (ProcessedContent): The content that was routed.
+        - decision (RoutingDecision): The decision made for routing.
+        """
         # Track routing decisions
         # Monitor routing performance
         # Record decision accuracy
         # Track destination usage
     
     def record_routing_error(self, error: RoutingError):
-        """Record routing error metrics"""
+        """
+        Record metrics for a routing error.
+
+        Parameters:
+        - error (RoutingError): The error encountered during routing.
+        """
         # Track error types
         # Monitor error rates
         # Record error impact
@@ -428,8 +715,16 @@ class RoutingMetrics:
 
 ```python
 class RoutingPerformanceMonitor:
+    """
+    Monitors the performance of the routing layer.
+    """
     def monitor_routing_performance(self) -> RoutingPerformanceMetrics:
-        """Monitor routing layer performance"""
+        """
+        Monitor routing layer performance and return metrics.
+
+        Returns:
+        - RoutingPerformanceMetrics: The performance metrics of the routing layer.
+        """
         return RoutingPerformanceMetrics(
             average_decision_time=self.calculate_average_decision_time(),
             routing_accuracy=self.calculate_routing_accuracy(),
@@ -475,9 +770,5 @@ routing:
     secondary_fallback: "archive_storage"
     retry_attempts: 3
 ``` 
-noteId: "1fb4178064c011f0970d05fa391d7ad1"
-tags: []
-
----
 
  

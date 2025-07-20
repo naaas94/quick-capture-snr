@@ -1,3 +1,9 @@
+---
+noteId: "3771a7a0658011f08b8485f937c5b446"
+tags: []
+
+---
+
 # Terminal Hanging Issues - Fix Guide
 
 ## Problems Identified

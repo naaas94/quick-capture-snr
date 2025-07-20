@@ -7,9 +7,7 @@ Observability in QuickCapture provides deep visibility into system health, perfo
 ## Observability Components
 
 ### 1. Metrics Collection
-- **metrics_collector.py**: Collects and aggregates system and application metrics
-- **performance_tracker.py**: Tracks performance metrics for key operations
-- **Custom Metrics**: Processing time, throughput, error rates, resource usage
+- **metrics_collector.py**: Collects and aggregates system and application metrics. It supports Prometheus integration for metrics collection and provides local storage for metrics if Prometheus is unavailable. The `MetricsCollector` class manages metrics such as ingestion rate, validation success rate, semantic coherence, and more. It also supports background collection and updates metrics every 15 seconds.
 
 #### Example Metrics
 - `note_processing_time_seconds`
@@ -38,9 +36,7 @@ Observability in QuickCapture provides deep visibility into system health, perfo
 ```
 
 ### 3. Health Monitoring
-- **health_monitor.py**: Monitors system health and component status
-- **health checks**: Storage, embedding model, classification, vector store
-- **Status endpoints**: `/health` API endpoint for system status
+- **health_monitor.py**: Monitors system health and component status. The `HealthMonitor` class performs comprehensive health checks, including database connectivity, storage performance, validation performance, and more. It uses a set of thresholds to determine the health status and can trigger alerts if certain conditions are met. The class supports background monitoring and maintains a history of health checks.
 
 #### Example Health Check
 ```python
@@ -72,7 +68,11 @@ alerts:
 - Set actionable alert thresholds
 - Regularly review metrics and logs
 - Test health checks and alerting
-- Document all observability configurations 
+- Document all observability configurations
+
+## Configuration
+
+The `observability.yaml` file defines settings for metrics collection, health monitoring, performance tracking, and alerting. It includes settings for Prometheus, custom metrics, health check thresholds, and alert channels. The file also configures logging, dashboard components, and export formats. 
 noteId: "1890968064c111f0970d05fa391d7ad1"
 tags: []
 
