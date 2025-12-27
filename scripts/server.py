@@ -127,5 +127,25 @@ async def search_notes(query: str, limit: int = 10):
     
     return response_items
 
+@app.get("/health")
+async def health_check():
+    """Basic health check for parser and storage."""
+    parser_ok = parser is not None
+    storage_status = {"ok": False, "error": "storage not initialized"}
+
+    try:
+        storage_status = storage.health() if storage else storage_status
+    except Exception as e:
+        logger.error(f"Storage health failed: {e}")
+        storage_status = {"ok": False, "error": str(e)}
+
+    overall_ok = parser_ok and storage_status.get("ok", False)
+
+    return {
+        "ok": overall_ok,
+        "parser": {"ok": parser_ok},
+        "storage": storage_status,
+    }
+
 if __name__ == "__main__":
     uvicorn.run(app, host="127.0.0.1", port=8000)

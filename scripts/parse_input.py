@@ -58,7 +58,7 @@ class NeuralParser:
     Intelligent parser using Local LLM (Ollama) for semantic extraction.
     """
     
-    def __init__(self, model_name: str = "phi3:latest"):
+    def __init__(self, model_name: str = "mistral:latest"):
         self.model_name = model_name
         
     def parse(self, text: str) -> Dict[str, Any]:

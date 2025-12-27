@@ -9,6 +9,7 @@ and JSONL backup with atomic operations.
 import json
 import sqlite3
 import pickle
+import threading
 from pathlib import Path
 from typing import Dict, List, Optional, Any, Tuple
 from datetime import datetime, timezone
@@ -41,6 +42,8 @@ class StorageEngine:
         """
         self.db_path = Path(db_path)
         self.vector_store_path = Path(vector_store_path)
+        # Thread-local SQLite connections for threadpool safety (must be set before any DB access)
+        self._local = threading.local()
         
         # Ensure directories exist
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -176,10 +179,12 @@ class StorageEngine:
     
     def _get_connection(self):
         """Get or create a persistent database connection."""
-        if not hasattr(self, '_persistent_conn') or self._persistent_conn is None:
-            self._persistent_conn = sqlite3.connect(self.db_path, timeout=30.0)
-            self._persistent_conn.row_factory = sqlite3.Row  # Enable dict-like access
-        return self._persistent_conn
+        conn = getattr(self._local, "conn", None)
+        if conn is None:
+            conn = sqlite3.connect(self.db_path, timeout=30.0, check_same_thread=False)
+            conn.row_factory = sqlite3.Row  # Enable dict-like access
+            self._local.conn = conn
+        return conn
     
     def _get_next_id(self) -> int:
         """Get next available integer ID for FAISS."""
@@ -604,6 +609,36 @@ class StorageEngine:
             json.dump(self.id_map, f)
             
         logger.info(f"FAISS index saved to {index_path}")
+
+    def health(self) -> Dict[str, Any]:
+        """
+        Lightweight health check for storage components.
+        - Verifies SQLite connectivity.
+        - Reports vector index size.
+        """
+        status: Dict[str, Any] = {
+            "ok": True,
+            "sqlite": {},
+            "vector_index": {},
+        }
+
+        try:
+            with self._get_connection() as conn:
+                cursor = conn.cursor()
+                cursor.execute("SELECT 1")
+                status["sqlite"] = {"ok": True}
+        except Exception as e:
+            status["ok"] = False
+            status["sqlite"] = {"ok": False, "error": str(e)}
+
+        try:
+            index_size = self.index.ntotal if hasattr(self, "index") else 0
+            status["vector_index"] = {"ok": True, "size": index_size}
+        except Exception as e:
+            status["ok"] = False
+            status["vector_index"] = {"ok": False, "error": str(e)}
+
+        return status
 
 
 
