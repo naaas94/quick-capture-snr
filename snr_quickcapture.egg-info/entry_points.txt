@@ -1,0 +1,3 @@
+[console_scripts]
+quick-add = scripts.quick_add:main
+review-outliers = scripts.review_outliers:main
