@@ -1,1 +1,29 @@
+# Project-specific ignores
 implementation_roadmap.md
+
+# Python caches and virtualenvs
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.cache/
+.venv/
+venv/
+
+# Editors/IDEs
+.vscode/
+.idea/
+.cursor/
+
+# Environment/config overrides
+.env
+.env.local
+
+# Logs
+*.log
+
+# Storage artifacts (generated at runtime)
+storage/quickcapture.db
+storage/vector_store/
+storage/backup/
+storage/id_map.json
