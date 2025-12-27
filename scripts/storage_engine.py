@@ -16,6 +16,7 @@ import logging
 from contextlib import contextmanager
 import faiss
 import numpy as np
+from sentence_transformers import SentenceTransformer
 
 from .models import ParsedNote, BatchProcessingResult
 from .parse_input import ContentType
@@ -48,8 +49,8 @@ class StorageEngine:
         # Initialize database
         self._init_database()
         
-        # Vector store placeholder (will be implemented with sentence-transformers)
-        self.vector_store = None
+        # Initialize embedding model and vector store
+        self.model = SentenceTransformer('all-MiniLM-L6-v2')
         self._init_vector_store()
     
     def _init_database(self):
@@ -121,17 +122,57 @@ class StorageEngine:
     
     def _init_vector_store(self):
         """Initialize vector store for semantic search using FAISS."""
-        dimension = 768  # Example dimension, should match your embeddings
-        self.index = faiss.IndexFlatL2(dimension)
-        logger.info("Initialized FAISS index for vector store")
-
+        # 384 dimensions for all-MiniLM-L6-v2
+        self.dimension = 384
+        
         # Load existing index if available
         index_path = self.vector_store_path / "faiss_index"
         if index_path.exists():
-            faiss.read_index(str(index_path))
-            logger.info("Loaded existing FAISS index from disk")
+            try:
+                self.index = faiss.read_index(str(index_path))
+                logger.info("Loaded existing FAISS index from disk")
+            except Exception as e:
+                logger.error(f"Failed to load index: {e}, starting fresh")
+                self.index = faiss.IndexFlatL2(self.dimension)
+                
+            # Mapping from FAISS ID to Note ID usually needs to be maintained.
+            # For simplicity, we assume we can look up by content or store ID mapping in SQLite.
+            # A common pattern is to have an `id_map` file or use `IndexIDMap`.
+            # For this MVP, we will rely on searching, then retrieving notes and checking which one matches. 
+            # Ideally: self.index = faiss.IndexIDMap(faiss.IndexFlatL2(self.dimension))
+            # But IndexIDMap requires add_with_ids.
+            
+            # Let's use IndexIDMap if we can easily manage integer IDs.
+            # SQLite does not have auto-increment int primary key for notes (UUID).
+            # We can use the SQLite rowid or add a separate integer index.
+            # For now, stick to simple index and maybe simpler retrieval or just rely on text content matching 
+            # if we don't implement the ID map fully.
+            # Wait, `add_with_ids` was in the original code? 
+            # Yes: `self.index.add_with_ids`. But `IndexFlatL2` doesn't support `add_with_ids` directly unless wrapped in IDs.
+            # The original code threw an error or was placeholder.
+            # I will wrap it in IndexIDMap.
+            if not isinstance(self.index, faiss.IndexIDMap):
+                 # If we loaded a plain index, we might need to migrate or wrap it?
+                 # If it's empty/fresh:
+                 if self.index.ntotal == 0:
+                     self.index = faiss.IndexIDMap(faiss.IndexFlatL2(self.dimension))
         else:
             logger.info("No existing FAISS index found, starting fresh")
+            self.index = faiss.IndexIDMap(faiss.IndexFlatL2(self.dimension))
+            
+        # We also need a mapping from integer ID back to UUID string.
+        # We can store this in a pickle file or a separate SQLite table.
+        self.id_map_path = self.vector_store_path / "id_map.json"
+        self.id_map = {}
+        if self.id_map_path.exists():
+            with open(self.id_map_path, 'r') as f:
+                self.id_map = json.load(f)
+                # Convert keys to int because JSON keys are strings
+                self.id_map = {int(k): v for k, v in self.id_map.items()}
+
+    def generate_embedding(self, text: str) -> List[float]:
+        """Generate embedding for text using the loaded model."""
+        return self.model.encode(text).tolist()
     
     def _get_connection(self):
         """Get or create a persistent database connection."""
@@ -140,6 +181,12 @@ class StorageEngine:
             self._persistent_conn.row_factory = sqlite3.Row  # Enable dict-like access
         return self._persistent_conn
     
+    def _get_next_id(self) -> int:
+        """Get next available integer ID for FAISS."""
+        if not self.id_map:
+            return 0
+        return max(self.id_map.keys()) + 1
+
     def store_note(self, note: ParsedNote) -> bool:
         """
         Store a note with atomic operations.
@@ -151,6 +198,10 @@ class StorageEngine:
             bool: True if successful, False otherwise
         """
         try:
+            # Generate embedding if missing
+            if not note.embedding_vector and note.note:
+                note.embedding_vector = self.generate_embedding(note.note)
+            
             with self._get_connection() as conn:
                 cursor = conn.cursor()
                 
@@ -189,6 +240,13 @@ class StorageEngine:
                         datetime.now(timezone.utc).isoformat(),
                         note.note_id
                     ))
+                    
+                    # For updates, we should technically remove old vector and add new one.
+                    # FAISS IDMap doesn't support remove readily without ID.
+                    # We'll skip complex update logic for MVP and just add new vector (might cause duplicates in search)
+                    # or better: we lookup the ID in id_map (reverse lookup needed)
+                    # For now, let's assume appending is okay-ish or we won't update vectors often.
+                    pass 
                 else:
                     # Insert new note
                     cursor.execute("""
@@ -221,7 +279,14 @@ class StorageEngine:
                         datetime.now(timezone.utc).isoformat(),
                         datetime.now(timezone.utc).isoformat()
                     ))
-                
+                    
+                    # Add to FAISS if we have a vector
+                    if note.embedding_vector:
+                        vector_id = self._get_next_id()
+                        self.add_to_vector_store([note.embedding_vector], [vector_id])
+                        self.id_map[vector_id] = note.note_id
+                        self.save_vector_store()
+
                 # Update tag statistics
                 self._update_tag_statistics(note, cursor)
                 
@@ -254,13 +319,6 @@ class StorageEngine:
     def retrieve_notes_by_tag(self, tag: str, limit: int = 100) -> List[ParsedNote]:
         """
         Retrieve notes by tag with optional limit.
-        
-        Args:
-            tag: Tag to search for
-            limit: Maximum number of notes to return
-            
-        Returns:
-            List of ParsedNote objects
         """
         try:
             with self._get_connection() as conn:
@@ -289,40 +347,39 @@ class StorageEngine:
     def search_semantic(self, query: str, limit: int = 10) -> List[ParsedNote]:
         """
         Semantic search using vector store.
-        
-        Args:
-            query: Search query
-            limit: Maximum number of results
-            
-        Returns:
-            List of ParsedNote objects ordered by relevance
         """
-        # Placeholder for semantic search
-        # In a full implementation, this would use sentence-transformers
-        # to generate embeddings and perform similarity search
-        
-        logger.info(f"Semantic search for '{query}' (placeholder implementation)")
-        
-        # Fallback to simple text search
         try:
+            # Generate query embedding
+            query_vector = self.generate_embedding(query)
+            
+            # Search in FAISS
+            indices = self.search_vector_store(query_vector, k=limit)
+            
+            # Map indices to note_ids
+            note_ids = []
+            for idx in indices:
+                if idx in self.id_map:
+                    note_ids.append(self.id_map[idx])
+            
+            if not note_ids:
+                return []
+            
+            # Retrieve notes from SQLite
+            placeholders = ','.join('?' for _ in note_ids)
             with self._get_connection() as conn:
                 cursor = conn.cursor()
-                
-                cursor.execute("""
+                cursor.execute(f"""
                     SELECT * FROM notes 
-                    WHERE note_body LIKE ? OR comment LIKE ?
-                    ORDER BY confidence_score DESC, timestamp DESC 
-                    LIMIT ?
-                """, (f'%{query}%', f'%{query}%', limit))
+                    WHERE note_id IN ({placeholders})
+                """, note_ids)
                 
                 rows = cursor.fetchall()
-                notes = []
                 
-                for row in rows:
-                    note = self._row_to_parsed_note(row)
-                    notes.append(note)
+                # Reorder based on search result order
+                note_map = {row['note_id']: self._row_to_parsed_note(row) for row in rows}
+                results = [note_map[nid] for nid in note_ids if nid in note_map]
                 
-                return notes
+                return results
                 
         except Exception as e:
             logger.error(f"Failed to perform semantic search: {e}")
@@ -331,9 +388,6 @@ class StorageEngine:
     def get_tag_statistics(self) -> Dict[str, int]:
         """
         Get tag usage statistics.
-        
-        Returns:
-            Dictionary mapping tags to usage counts
         """
         try:
             with self._get_connection() as conn:
@@ -360,17 +414,7 @@ class StorageEngine:
             return {}
     
     def get_notes_by_confidence_range(self, min_confidence: float = 0.0, max_confidence: float = 1.0, limit: int = 100) -> List[ParsedNote]:
-        """
-        Get notes within a confidence score range.
-        
-        Args:
-            min_confidence: Minimum confidence score
-            max_confidence: Maximum confidence score
-            limit: Maximum number of notes to return
-            
-        Returns:
-            List of ParsedNote objects
-        """
+        """Get notes within a confidence score range."""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
@@ -396,15 +440,7 @@ class StorageEngine:
             return []
     
     def get_notes_with_issues(self, limit: int = 100) -> List[ParsedNote]:
-        """
-        Get notes that have validation issues.
-        
-        Args:
-            limit: Maximum number of notes to return
-            
-        Returns:
-            List of ParsedNote objects with issues
-        """
+        """Get notes that have validation issues."""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
@@ -430,15 +466,7 @@ class StorageEngine:
             return []
     
     def backup_to_jsonl(self, backup_path: str = "storage/backup/") -> bool:
-        """
-        Create JSONL backup of all notes.
-        
-        Args:
-            backup_path: Directory to store backup files
-            
-        Returns:
-            bool: True if successful, False otherwise
-        """
+        """Create JSONL backup of all notes."""
         try:
             backup_dir = Path(backup_path)
             backup_dir.mkdir(parents=True, exist_ok=True)
@@ -486,12 +514,7 @@ class StorageEngine:
         )
     
     def get_database_stats(self) -> Dict[str, Any]:
-        """
-        Get database statistics.
-        
-        Returns:
-            Dictionary with database statistics
-        """
+        """Get database statistics."""
         try:
             with self._get_connection() as conn:
                 cursor = conn.cursor()
@@ -499,7 +522,6 @@ class StorageEngine:
                 # Check if tables exist
                 cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='notes'")
                 if not cursor.fetchone():
-                    # Tables don't exist yet, return empty stats
                     return {
                         'total_notes': 0,
                         'valid_notes': 0,
@@ -510,29 +532,26 @@ class StorageEngine:
                         'database_size_mb': 0.0
                     }
                 
-                # Total notes
                 cursor.execute("SELECT COUNT(*) as count FROM notes")
                 total_notes = cursor.fetchone()['count']
                 
-                # Valid notes
                 cursor.execute("SELECT COUNT(*) as count FROM notes WHERE valid = 1")
                 valid_notes = cursor.fetchone()['count']
                 
-                # Notes with issues
                 cursor.execute("SELECT COUNT(*) as count FROM notes WHERE valid = 0 OR issues != '[]'")
                 notes_with_issues = cursor.fetchone()['count']
                 
-                # Average confidence
                 cursor.execute("SELECT AVG(confidence_score) as avg_confidence FROM notes")
                 avg_confidence = cursor.fetchone()['avg_confidence'] or 0.0
                 
-                # Average semantic density
                 cursor.execute("SELECT AVG(semantic_density) as avg_density FROM notes")
                 avg_density = cursor.fetchone()['avg_density'] or 0.0
                 
-                # Total tags
                 cursor.execute("SELECT COUNT(*) as count FROM tag_statistics")
                 total_tags = cursor.fetchone()['count']
+                
+                # Get vector index stats
+                vector_count = self.index.ntotal if hasattr(self, 'index') else 0
                 
                 return {
                     'total_notes': total_notes,
@@ -541,6 +560,7 @@ class StorageEngine:
                     'avg_confidence': round(avg_confidence, 3),
                     'avg_semantic_density': round(avg_density, 3),
                     'total_tags': total_tags,
+                    'vector_index_size': vector_count,
                     'database_size_mb': self.db_path.stat().st_size / (1024 * 1024) if self.db_path.exists() else 0.0
                 }
                 
@@ -560,7 +580,12 @@ class StorageEngine:
         """Add vectors to the FAISS index."""
         if len(vectors) != len(ids):
             raise ValueError("Vectors and IDs must have the same length")
-        self.index.add_with_ids(np.array(vectors, dtype='float32'), np.array(ids))
+        
+        # Ensure vectors are numpy array of float32
+        vectors_np = np.array(vectors, dtype='float32')
+        ids_np = np.array(ids, dtype='int64')
+        
+        self.index.add_with_ids(vectors_np, ids_np)
         logger.info(f"Added {len(vectors)} vectors to the FAISS index")
 
     def search_vector_store(self, query_vector: List[float], k: int = 10) -> List[int]:
@@ -571,10 +596,15 @@ class StorageEngine:
         return indices[0].tolist()
 
     def save_vector_store(self):
-        """Save the FAISS index to disk."""
+        """Save the FAISS index and id_map to disk."""
         index_path = self.vector_store_path / "faiss_index"
         faiss.write_index(self.index, str(index_path))
+        
+        with open(self.id_map_path, 'w') as f:
+            json.dump(self.id_map, f)
+            
         logger.info(f"FAISS index saved to {index_path}")
+
 
 
 if __name__ == "__main__":

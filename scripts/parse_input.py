@@ -1,18 +1,17 @@
-#!/usr/bin/env python3
-"""
-Enhanced Input Parsing Module
-
-Parse user input string into structured components with semantic preprocessing
-and intelligent tag extraction.
-"""
-
 import re
 import string
+import json
+import logging
 from dataclasses import dataclass
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Literal, Any
 import math
 
+import ollama
+from pydantic import BaseModel, Field
+
+# Set up logging
+logger = logging.getLogger(__name__)
 
 class ContentType(Enum):
     """Content type classification for notes."""
@@ -22,6 +21,7 @@ class ContentType(Enum):
     REFERENCE = "reference"
     CODE = "code"
     GENERAL = "general"
+    JOURNAL = "journal"
 
 
 @dataclass
@@ -34,12 +34,74 @@ class ParsedInput:
     semantic_density: float
     content_type: ContentType
     confidence_score: float
+    snr_metadata: Dict[str, Any] = None
 
 
 class ParsingError(Exception):
     """Custom exception for parsing failures."""
     pass
 
+
+class CognitiveNote(BaseModel):
+    """Pydantic model for LLM structured output."""
+    summary: str = Field(description="A concise summary of the note")
+    tags: List[str] = Field(description="Relevant tags for the note")
+    sentiment: Literal["positive", "neutral", "negative"] = Field(description="Sentiment of the content")
+    entities: List[str] = Field(description="Named entities mentioned in the note")
+    intent: Literal["task", "log", "idea", "journal", "meeting", "reference", "code"] = Field(description="The primary intent or category of the note")
+    action_items: List[str] = Field(default=[], description="Extracted action items if any")
+    people: List[str] = Field(default=[], description="People mentioned in the note")
+
+
+class NeuralParser:
+    """
+    Intelligent parser using Local LLM (Ollama) for semantic extraction.
+    """
+    
+    def __init__(self, model_name: str = "phi3:latest"):
+        self.model_name = model_name
+        
+    def parse(self, text: str) -> Dict[str, Any]:
+        """
+        Parse text using LLM to extract structured metadata.
+        """
+        try:
+            prompt = f"""
+            Analyze the following note and extract structured metadata.
+            Note Content: "{text}"
+            
+            Return a JSON object with the following fields:
+            - summary: Concise summary
+            - tags: List of relevant tags (lowercase, kebab-case)
+            - sentiment: positive, neutral, or negative
+            - entities: List of named entities (products, places, etc.)
+            - intent: One of [task, log, idea, journal, meeting, reference, code]
+            - action_items: List of actionable strings
+            - people: List of people mentioned
+            """
+            
+            response = ollama.chat(
+                model=self.model_name,
+                format='json',
+                messages=[
+                    {'role': 'system', 'content': 'You are a semantic note analyzer. Output ONLY valid JSON.'},
+                    {'role': 'user', 'content': prompt}
+                ]
+            )
+            
+            content = response['message']['content']
+            parsed_json = json.loads(content)
+            
+            # Validate with Pydantic
+            cognitive_note = CognitiveNote(**parsed_json)
+            
+            return cognitive_note.model_dump()
+            
+        except Exception as e:
+            logger.error(f"Neural parsing failed: {e}")
+            # Fallback to heuristic parsing if needed, or re-raise
+            # For now return None or empty dict to signal failure
+            return None
 
 def calculate_semantic_density(text: str) -> float:
     """
@@ -173,12 +235,9 @@ def normalize_tags(tags: List[str]) -> List[str]:
 
 def parse_note_input(text: str) -> Dict:
     """
-    Parse the user input string into structured components.
-    
+    Legacy parser for backward compatibility and fallback.
+    Parse user input string into structured components using regex.
     Expected grammar: tag1, tag2: note body : optional comment
-    
-    Returns:
-        Dict with parsed components and semantic analysis
     """
     if not text or not text.strip():
         raise ParsingError("Input text cannot be empty")
@@ -189,7 +248,17 @@ def parse_note_input(text: str) -> Dict:
     parts = raw_text.split(':', 2)
     
     if len(parts) < 2:
-        raise ParsingError("Invalid format: must contain at least one colon separator")
+        # Fallback for simple text: treat as general note with 'inbox' tag
+        return {
+            "tags": ["inbox"],
+            "note": raw_text,
+            "comment": None,
+            "raw_text": raw_text,
+            "semantic_density": calculate_semantic_density(raw_text),
+            "content_type": ContentType.GENERAL,
+            "confidence_score": 0.5,
+            "snr_metadata": {}
+        }
     
     # Extract tags and note body
     tag_part = parts[0].strip()
@@ -197,14 +266,11 @@ def parse_note_input(text: str) -> Dict:
     comment = parts[2].strip() if len(parts) > 2 else None
     
     # Parse tags
-    if not tag_part:
-        raise ParsingError("Tags section cannot be empty")
-    
     tags = [tag.strip() for tag in tag_part.split(',')]
     tags = normalize_tags(tags)
     
     if not tags:
-        raise ParsingError("At least one valid tag is required")
+        tags = ["inbox"]
     
     if not note_body:
         raise ParsingError("Note body cannot be empty")
@@ -224,7 +290,8 @@ def parse_note_input(text: str) -> Dict:
         "raw_text": raw_text,
         "semantic_density": semantic_density,
         "content_type": content_type,
-        "confidence_score": 0.0  # Will be calculated next
+        "confidence_score": 0.0,
+        "snr_metadata": {}
     }
     
     # Calculate confidence score
@@ -236,9 +303,6 @@ def parse_note_input(text: str) -> Dict:
 def parse_note_input_with_validation(text: str) -> Tuple[Dict, List[str]]:
     """
     Parse input with additional validation and return issues.
-    
-    Returns:
-        Tuple of (parsed_dict, list_of_issues)
     """
     issues = []
     
@@ -249,7 +313,7 @@ def parse_note_input_with_validation(text: str) -> Tuple[Dict, List[str]]:
         if parsed['semantic_density'] < 0.2:
             issues.append("Low semantic density - consider adding more meaningful content")
         
-        if len(parsed['note']) < 20:
+        if len(parsed['note']) < 10:
             issues.append("Note body is quite short - consider expanding")
         
         if len(parsed['tags']) > 10:
